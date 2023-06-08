@@ -1,0 +1,26 @@
+{
+  "Version": 1,
+  "ProjectMap": {
+    "adc7b57d-9b69-471a-bcb1-34f1c651d2f8": {
+      "ProjectGuid": "adc7b57d-9b69-471a-bcb1-34f1c651d2f8",
+      "DisplayName": "Facebook",
+      "ColorIndex": 0
+    },
+    "a2fe74e1-b743-11d0-ae1a-00a0c90fffc3": {
+      "ProjectGuid": "a2fe74e1-b743-11d0-ae1a-00a0c90fffc3",
+      "DisplayName": "Miscellaneous Files",
+      "ColorIndex": -1
+    },
+    "2b4dc3b0-318a-4f52-903e-cfb0b75951ae": {
+      "ProjectGuid": "2b4dc3b0-318a-4f52-903e-cfb0b75951ae",
+      "DisplayName": "WebApplication1",
+      "ColorIndex": 1
+    },
+    "46eadd31-f99d-435d-b052-ec5dd395bf67": {
+      "ProjectGuid": "46eadd31-f99d-435d-b052-ec5dd395bf67",
+      "DisplayName": "Facebook.Infrastructure",
+      "ColorIndex": 2
+    }
+  },
+  "NextColorIndex": 3
+}
