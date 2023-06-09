@@ -98,6 +98,7 @@ namespace Facebook.Controllers
         /// <param name="filter">The filter.</param>
         /// <param name="requestType">Type of the request.</param>
         /// <returns>fde.</returns>
+        [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> GetRequestedUsers(long userId, int filter, int requestType)
         {

@@ -22,9 +22,10 @@ namespace Facebook.Controllers
         private readonly IAccountRepository accountRepository;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AccountController"/> class.
+        /// Initializes a new instance of the <see cref="AccountController" /> class.
         /// </summary>
         /// <param name="accountRepository">The account repository.</param>
+        /// <param name="encrptionAndDecryptionRepository">The encrption and decryption repository.</param>
         public AccountController(IAccountRepository accountRepository)
         {
             this.accountRepository = accountRepository;
@@ -107,6 +108,22 @@ namespace Facebook.Controllers
             {
                 return this.BadRequest(ex.Validations);
             }
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> TestingPass(string updatedPassword)
+        {
+            var result = this.accountRepository.EncodePasswordToBase64(updatedPassword);
+            return this.Ok(result);
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> TestingPass1(string updatedPassword)
+        {
+            var result = this.accountRepository.DecodeFrom64(updatedPassword);
+            return this.Ok(result);
         }
     }
 }

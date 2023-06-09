@@ -52,5 +52,7 @@ namespace Facebook.Interface
         /// <param name="updatedPassword">The updated password.</param>
         /// <returns>return true if successfully password changed.</returns>
         Task<bool> UpdateNewPassword(long userId, string updatedPassword);
+        string DecodeFrom64(string encodedData);
+        string EncodePasswordToBase64(string password);
     }
 }

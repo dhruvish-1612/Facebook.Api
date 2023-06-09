@@ -8,6 +8,7 @@ namespace Facebook.Repositories
     using System.Net;
     // using System.Net.Mail;
     using System.Text.RegularExpressions;
+    using System.Web.Helpers;
     using AutoMapper;
     using Facebook.Auth;
     using Facebook.CustomException;
@@ -62,9 +63,9 @@ namespace Facebook.Repositories
             if (!isValidEmail || !isVaildPassword)
                 errors.Add(new ValidationsModel() { StatusCode = (int)HttpStatusCode.Unauthorized, ErrorMessage = "Email Or Password Incorrect." });
 
-            User existUser = await this.db.Users.FirstOrDefaultAsync(user => user.Email.Equals(loginParams.Email.ToLower()) && user.Password.Equals(loginParams.Password)) ?? new User();
+            User existUser = await this.db.Users.FirstOrDefaultAsync(user => user.Email.Equals(loginParams.Email.ToLower())) ?? new User();
 
-            if (existUser.UserId == 0)
+            if (existUser.UserId == 0 && !Crypto.VerifyHashedPassword(loginParams.Password, existUser.Password))
                 errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "Email or Password Not Found." });
 
             if (errors.Any())
@@ -179,7 +180,7 @@ namespace Facebook.Repositories
             if (errors.Any())
                 throw new AggregateValidationException { Validations = errors };
 
-            user.Password = updatedPassword;
+            user.Password = Crypto.HashPassword(updatedPassword);
             this.db.Update(user);
             await this.db.SaveChangesAsync();
             return true;
@@ -195,7 +196,7 @@ namespace Facebook.Repositories
         {
             await Task.Run(() =>
             {
-                var mailBody = $"<h1>reset password</h1><br><h2> {token} </h2>";
+                var mailBody = $"<h1>Otp For Reset password</h1><h2> {token} </h2>";
 
                 // create email message
                 var email = new MimeMessage();
@@ -230,5 +231,40 @@ namespace Facebook.Repositories
                  message.Dispose();
              });
          }*/
+
+
+
+
+
+
+
+        //this function Convert to Encord your Password
+        public string EncodePasswordToBase64(string password)
+        {
+            try
+            {
+                byte[] encData_byte = new byte[password.Length];
+                encData_byte = System.Text.Encoding.UTF8.GetBytes(password);
+                string encodedData = Convert.ToBase64String(encData_byte);
+                return encodedData;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error in base64Encode" + ex.Message);
+            }
+        }
+        //this function Convert to Decord your Password
+        public string DecodeFrom64(string encodedData)
+        {
+            System.Text.UTF8Encoding encoder = new System.Text.UTF8Encoding();
+            System.Text.Decoder utf8Decode = encoder.GetDecoder();
+            byte[] todecode_byte = Convert.FromBase64String(encodedData);
+            int charCount = utf8Decode.GetCharCount(todecode_byte, 0, todecode_byte.Length);
+            char[] decoded_char = new char[charCount];
+            utf8Decode.GetChars(todecode_byte, 0, todecode_byte.Length, decoded_char, 0);
+            string result = new String(decoded_char);
+            return result;
+        }
+        
     }
 }

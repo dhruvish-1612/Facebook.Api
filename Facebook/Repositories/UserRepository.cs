@@ -6,6 +6,7 @@ namespace Facebook.Repositories
 {
     using System.Net;
     using System.Text.RegularExpressions;
+    using System.Web.Helpers;
     using AutoMapper;
     using Facebook.CustomException;
     using Facebook.Infrastructure.Infrastructure;
@@ -128,6 +129,7 @@ namespace Facebook.Repositories
                fileName = await this.GetAvtarName(user.FormFile);
 
             user.Avatar = fileName;
+            user.Password = Crypto.HashPassword(user.Password);
             user.Email = user.Email.ToLower();
             User newlyUser = this.mapper.Map<User>(user);
             this.db.Users.Add(newlyUser);
@@ -173,9 +175,10 @@ namespace Facebook.Repositories
             }
 
             user.Avatar = fileName;
+            user.Password = Crypto.HashPassword(user.Password);
             this.DeleteExistingMedia(existingUser.Avatar ?? string.Empty);
-            user.UpdatedAt = DateTime.Now;
             User updatedUser = this.mapper.Map(user, existingUser);
+            user.UpdatedAt = DateTime.Now;
             this.db.Users.Update(updatedUser);
             await this.db.SaveChangesAsync();
             return updatedUser.UserId;
