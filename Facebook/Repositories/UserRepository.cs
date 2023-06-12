@@ -22,16 +22,18 @@ namespace Facebook.Repositories
     {
         private readonly FacebookContext db;
         private readonly IMapper mapper;
+        private readonly IUserRequestRepository userRequestRepository;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UserRepository" /> class.
         /// </summary>
         /// <param name="facebookContext">The facebook context.</param>
         /// <param name="mapper">The mapper.</param>
-        public UserRepository(FacebookContext facebookContext, IMapper mapper)
+        public UserRepository(FacebookContext facebookContext, IMapper mapper, IUserRequestRepository userRequestRepository)
         {
             this.db = facebookContext;
             this.mapper = mapper;
+            this.userRequestRepository = userRequestRepository;
         }
 
         /// <summary>
@@ -97,7 +99,7 @@ namespace Facebook.Repositories
             }
             else
             {
-                 userId = await this.UpdateUser(user);
+                userId = await this.UpdateUser(user);
             }
 
             return await this.GetUserById(userId);
@@ -126,7 +128,7 @@ namespace Facebook.Repositories
 
             string fileName = string.Empty;
             if (user.FormFile != null)
-               fileName = await this.GetAvtarName(user.FormFile);
+                fileName = await this.GetAvtarName(user.FormFile);
 
             user.Avatar = fileName;
             user.Password = Crypto.HashPassword(user.Password);
@@ -157,7 +159,7 @@ namespace Facebook.Repositories
             bool isValidPassword = await this.ValidatePassword(user.Password);
             if (!isValidPassword)
             {
-                errors.Add(new ValidationsModel() { StatusCode = (int)HttpStatusCode.Unauthorized, ErrorMessage = "Incorrect Password And Phonenumber" });
+                errors.Add(new ValidationsModel() { StatusCode = (int)HttpStatusCode.Unauthorized, ErrorMessage = "Incorrect Password." });
             }
 
             if (existingUser.Email != user.Email.ToLower())
@@ -175,7 +177,7 @@ namespace Facebook.Repositories
             }
 
             user.Avatar = fileName;
-            user.Password = Crypto.HashPassword(user.Password);
+            user.Password = existingUser.Password;
             this.DeleteExistingMedia(existingUser.Avatar ?? string.Empty);
             User updatedUser = this.mapper.Map(user, existingUser);
             user.UpdatedAt = DateTime.Now;
@@ -191,7 +193,7 @@ namespace Facebook.Repositories
         /// <returns>if successfully delete user then return deleted user objrct otherwise return empty model.</returns>
         public async Task<UserModel> DeleteUser(long id)
         {
-            List<ValidationsModel> validationErrors = new List<ValidationsModel>();
+            List<ValidationsModel> validationErrors = new();
             User? userToDelete = await this.db.Users.FirstOrDefaultAsync(user => user.UserId == id && user.DeletedAt == null);
             UserModel deleteUserObj = new();
             if (userToDelete == null)

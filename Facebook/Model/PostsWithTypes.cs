@@ -1,4 +1,8 @@
-﻿namespace Facebook.Model
+﻿// <copyright file="PostsWithTypes.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+namespace Facebook.Model
 {
     /// <summary>
     /// Post With Types.
@@ -6,7 +10,7 @@
     public class PostsWithTypes
     {
         /// <summary>
-        /// The media name.
+        /// Gets or Sets The media name.
         /// </summary>
         /// <value>
         /// The name of the media.
@@ -14,7 +18,7 @@
         public string MediaName { get; set; } = string.Empty;
 
         /// <summary>
-        /// The media type.
+        /// Gets or Sets The media type.
         /// </summary>
         /// <value>
         /// The type of the media.

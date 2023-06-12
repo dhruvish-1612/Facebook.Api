@@ -49,8 +49,14 @@ namespace Facebook.Interface
         /// </summary>
         /// <param name="requestId">The request identifier.</param>
         /// <param name="acceptId">The accept identifier.</param>
-        /// <returns></returns>
+        /// <returns>return friendship object.</returns>
         Task<FriendShipModel> SendFreindRequest(long requestId, long acceptId);
+
+        /// <summary>
+        /// Validates the user by identifier.
+        /// </summary>
+        /// <param name="userId">The user identifier.</param>
+        /// <returns>true if valid user found o/w false.</returns>
         Task<bool> ValidateUserById(long userId);
     }
 }

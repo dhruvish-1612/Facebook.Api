@@ -3,13 +3,13 @@
 // </copyright>
 namespace Facebook.Controllers
 {
+    using Facebook.CustomException;
     using Facebook.Interface;
     using Facebook.Model;
-    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
 
     /// <summary>
-    /// UserSocialActivitiesRepository 
+    /// UserSocialActivitiesRepository.
     /// </summary>
     /// <seealso cref="Microsoft.AspNetCore.Mvc.ControllerBase" />
     [Route("[controller]")]
@@ -17,6 +17,7 @@ namespace Facebook.Controllers
     public class UserSocialActivitiesController : ControllerBase
     {
         private readonly IUserSocialActivitiesRepository userSocialActivitiesRepository;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="UserSocialActivitiesController"/> class.
         /// </summary>
@@ -28,11 +29,17 @@ namespace Facebook.Controllers
         /// </summary>
         /// <param name="posts">The posts.</param>
         /// <returns>Added Posts of that users.</returns>
-        [HttpPost]
+        [HttpPost("AddPosts")]
         public async Task<IActionResult> AddPosts([FromForm] UserPostsModel posts)
         {
-            await this.userSocialActivitiesRepository.UserPosts(posts);
-            return this.Ok("ok");
+            try
+            {
+                return this.Ok(await this.userSocialActivitiesRepository.UserPosts(posts));
+            }
+            catch (AggregateValidationException ex)
+            {
+                return this.BadRequest(ex.Validations);
+            }
         }
     }
 }

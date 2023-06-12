@@ -19,6 +19,8 @@ namespace Facebook.Helpers
         public UserUpsertMapper()
         {
             this.CreateMap<User, UserModel>().ReverseMap();
+            this.CreateMap<UserPost, GetUserPostModel>().ReverseMap();
+            this.CreateMap<StoryModel, Story>().ReverseMap();
         }
     }
 }

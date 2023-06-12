@@ -27,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Medias\UserStories\" />
     <Folder Include="Medias\UsersPosts\" />
     <Folder Include="Medias\UserProfilePhoto\" />
   </ItemGroup>

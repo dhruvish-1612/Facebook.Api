@@ -27,12 +27,15 @@ public partial class FacebookContext : DbContext
 
     public virtual DbSet<PostLike> PostLikes { get; set; }
 
+    public virtual DbSet<Story> Stories { get; set; }
+
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<UserPost> UserPosts { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseSqlServer("Name=ConnectionStrings:FacebookConnection");
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=PCT71\\SQL2017;Initial Catalog=Facebook;Persist Security Info=False;User ID=sa;Password=Tatva@123;MultipleActiveResultSets=False;Encrypt=False;TrustServerCertificate=False;Connection Timeout=30;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -107,6 +110,10 @@ public partial class FacebookContext : DbContext
             entity.Property(e => e.DeletedAt)
                 .HasColumnType("datetime")
                 .HasColumnName("deleted_at");
+            entity.Property(e => e.Token)
+                .HasMaxLength(10)
+                .IsUnicode(false)
+                .HasColumnName("token");
             entity.Property(e => e.UpdatedAt)
                 .HasColumnType("datetime")
                 .HasColumnName("updated_at");
@@ -218,6 +225,39 @@ public partial class FacebookContext : DbContext
                 .HasConstraintName("fk_post_like_user_post_id");
         });
 
+        modelBuilder.Entity<Story>(entity =>
+        {
+            entity.HasKey(e => e.StoryId).HasName("PK__story__66339C56741B0803");
+
+            entity.ToTable("story");
+
+            entity.Property(e => e.StoryId).HasColumnName("story_id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.DeletedAt)
+                .HasColumnType("datetime")
+                .HasColumnName("deleted_at");
+            entity.Property(e => e.MediaPath)
+                .HasMaxLength(2048)
+                .IsUnicode(false)
+                .HasColumnName("media_path");
+            entity.Property(e => e.MediaType)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("media_type");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.WrittenText)
+                .HasColumnType("text")
+                .HasColumnName("written_text");
+
+            entity.HasOne(d => d.User).WithMany(p => p.Stories)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_story_user_id");
+        });
+
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(e => e.UserId).HasName("PK__users__B9BE370F5E73E1D3");
@@ -306,7 +346,10 @@ public partial class FacebookContext : DbContext
                 .HasMaxLength(2048)
                 .IsUnicode(false)
                 .HasColumnName("media_path");
-            entity.Property(e => e.MediaType).HasColumnName("media_type");
+            entity.Property(e => e.MediaType)
+                .HasMaxLength(10)
+                .IsUnicode(false)
+                .HasColumnName("media_type");
             entity.Property(e => e.UpdatedAt)
                 .HasColumnType("datetime")
                 .HasColumnName("updated_at");

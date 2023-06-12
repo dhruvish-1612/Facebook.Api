@@ -92,7 +92,7 @@ namespace Facebook.Controllers
         /// <returns>User Upsert UserModel.</returns>
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> UserUpsert([FromForm]UserModel user)
+        public async Task<IActionResult> UserUpsert([FromForm] UserModel user)
         {
             try
             {

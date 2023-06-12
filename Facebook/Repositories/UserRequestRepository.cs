@@ -23,19 +23,14 @@ namespace Facebook.Repositories
         /// </summary>
         private readonly FacebookContext db;
 
-        /// <summary>Gets the user repository.</summary>
-        /// <value>The user repository.</value>
-        private readonly IUserRepository userRepository;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="UserRequestRepository"/> class.
         /// </summary>
         /// <param name="facebookContext">The facebook context.</param>
         /// <param name="userRepository">The user repository.</param>
-        public UserRequestRepository(FacebookContext facebookContext, IUserRepository userRepository)
+        public UserRequestRepository(FacebookContext facebookContext)
         {
             this.db = facebookContext;
-            this.userRepository = userRepository;
         }
 
         /// <summary>

@@ -13,7 +13,7 @@ public partial class UserPost
 
     public string MediaPath { get; set; } = null!;
 
-    public int? MediaType { get; set; }
+    public string? MediaType { get; set; }
 
     public DateTime CreatedAt { get; set; }
 

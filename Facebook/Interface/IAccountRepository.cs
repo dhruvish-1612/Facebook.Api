@@ -18,7 +18,7 @@ namespace Facebook.Interface
         /// <param name="emailId">The email identifier.</param>
         /// <param name="userId">The user identifier.</param>
         /// <returns>UserId.</returns>
-        Task<long> ForgotPassword(string emailId, long userId);
+        Task<long> SendTokenViaMailForForgotPassword(string emailId, long userId);
 
         /// <summary>
         /// Sends the token mail.
@@ -51,8 +51,20 @@ namespace Facebook.Interface
         /// <param name="userId">The user identifier.</param>
         /// <param name="updatedPassword">The updated password.</param>
         /// <returns>return true if successfully password changed.</returns>
-        Task<bool> UpdateNewPassword(long userId, string updatedPassword);
+        Task<bool> ResetPassword(long userId, string oldPassword, string updatedPassword);
+
+        /// <summary>
+        /// Decodes the from64.
+        /// </summary>
+        /// <param name="encodedData">The encoded data.</param>
+        /// <returns>Decoded password.</returns>
         string DecodeFrom64(string encodedData);
+
+        /// <summary>
+        /// Encodes the password to base64.
+        /// </summary>
+        /// <param name="password">The password.</param>
+        /// <returns>Encoded password.</returns>
         string EncodePasswordToBase64(string password);
     }
 }

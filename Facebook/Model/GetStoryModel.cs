@@ -1,13 +1,13 @@
-﻿// <copyright file="UserPostsModel.cs" company="PlaceholderCompany">
+﻿// <copyright file="GetStoryModel.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
 namespace Facebook.Model
 {
     /// <summary>
-    /// User Posts Model.
+    /// Get Story.
     /// </summary>
-    public class UserPostsModel
+    public class GetStoryModel
     {
         /// <summary>
         /// Gets or sets the user identifier.
@@ -15,22 +15,22 @@ namespace Facebook.Model
         /// <value>
         /// The user identifier.
         /// </value>
-        public long UserId { get; set; } = 0;
+        public long UserId { get; set; }
 
         /// <summary>
-        /// Gets or sets the post text.
+        /// Gets or sets the text.
         /// </summary>
         /// <value>
-        /// The post text.
+        /// The text.
         /// </value>
-        public string PostText { get; set; } = string.Empty;
+        public string Text { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the posts.
+        /// Gets or sets the media path.
         /// </summary>
         /// <value>
-        /// The posts.
+        /// The media path.
         /// </value>
-        public List<IFormFile> Posts { get; set; } = new List<IFormFile>();
+        public IFormFile Media { get; set; } = null!;
     }
 }

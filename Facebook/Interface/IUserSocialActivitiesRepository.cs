@@ -2,15 +2,20 @@
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
-using Facebook.Model;
-
 namespace Facebook.Interface
 {
+    using Facebook.Model;
+
     /// <summary>
     /// UserSocialActivitiesRepository Interface.
     /// </summary>
     public interface IUserSocialActivitiesRepository
     {
-        Task UserPosts(UserPostsModel posts);
+        /// <summary>
+        /// Users the posts.
+        /// </summary>
+        /// <param name="posts">The posts.</param>
+        /// <returns>return. </returns>
+        Task<List<GetUserPostModel>> UserPosts(UserPostsModel posts);
     }
 }

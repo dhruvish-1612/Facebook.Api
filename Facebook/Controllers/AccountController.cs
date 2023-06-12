@@ -38,7 +38,7 @@ namespace Facebook.Controllers
         /// <returns>user object if successfully login.</returns>
         [AllowAnonymous]
         [HttpPost]
-        public async Task<IActionResult> UserLogin(LoginParams loginParams)
+        public async Task<IActionResult> UserLogin([FromForm] LoginParams loginParams)
         {
             try
             {
@@ -58,11 +58,11 @@ namespace Facebook.Controllers
         /// <returns> UserId. </returns>
         [AllowAnonymous]
         [HttpGet]
-        public async Task<IActionResult> ForgotPassword(string emailId, long userId)
+        public async Task<IActionResult> SendTokenViaMailForForgotPassword(string emailId, long userId)
         {
             try
             {
-                return this.Ok(await this.accountRepository.ForgotPassword(emailId, userId));
+                return this.Ok(await this.accountRepository.SendTokenViaMailForForgotPassword(emailId, userId));
             }
             catch (AggregateValidationException ex)
             {
@@ -94,15 +94,16 @@ namespace Facebook.Controllers
         /// Updates the new password.
         /// </summary>
         /// <param name="userId">The user identifier.</param>
+        /// <param name="oldPassword">The older password.</param>
         /// <param name="updatedPassword">The updated password.</param>
         /// <returns>return true if successfully update the password.</returns>
         [AllowAnonymous]
-        [HttpGet]
-        public async Task<IActionResult> UpdateNewPassword(long userId, string updatedPassword)
+        [HttpPatch]
+        public async Task<IActionResult> ResetPassword(long userId, string oldPassword, string updatedPassword)
         {
             try
             {
-                return this.Ok(await this.accountRepository.UpdateNewPassword(userId, updatedPassword));
+                return this.Ok(await this.accountRepository.ResetPassword(userId, oldPassword, updatedPassword));
             }
             catch (AggregateValidationException ex)
             {
@@ -110,17 +111,31 @@ namespace Facebook.Controllers
             }
         }
 
+        /// <summary>
+        /// EncodePasswordToBase64.
+        /// </summary>
+        /// <param name="updatedPassword">The updated password.</param>
+        /// <returns>
+        /// encoded password.
+        /// </returns>
         [AllowAnonymous]
         [HttpGet]
-        public async Task<IActionResult> TestingPass(string updatedPassword)
+        public IActionResult EncodePasswordToBase64(string updatedPassword)
         {
             var result = this.accountRepository.EncodePasswordToBase64(updatedPassword);
             return this.Ok(result);
         }
 
+        /// <summary>
+        /// Decodes the from64.
+        /// </summary>
+        /// <param name="updatedPassword">The updated password.</param>
+        /// <returns>
+        /// decoded password.
+        /// </returns>
         [AllowAnonymous]
         [HttpGet]
-        public async Task<IActionResult> TestingPass1(string updatedPassword)
+        public IActionResult DecodeFrom64(string updatedPassword)
         {
             var result = this.accountRepository.DecodeFrom64(updatedPassword);
             return this.Ok(result);

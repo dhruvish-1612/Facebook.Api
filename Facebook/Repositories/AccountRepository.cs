@@ -6,7 +6,7 @@ namespace Facebook.Repositories
 {
     using System.ComponentModel;
     using System.Net;
-    // using System.Net.Mail;
+    /*using System.Net.Mail;*/
     using System.Text.RegularExpressions;
     using System.Web.Helpers;
     using AutoMapper;
@@ -40,6 +40,7 @@ namespace Facebook.Repositories
         /// <param name="db">The database.</param>
         /// <param name="mapper">The mapper.</param>
         /// <param name="userRepository">The user repository.</param>
+        /// <param name="userRequest">The user request.</param>
         /// <param name="configuration">The configuration.</param>
         public AccountRepository(FacebookContext db, IMapper mapper, IUserRepository userRepository, IUserRequestRepository userRequest, IConfiguration configuration)
         {
@@ -82,7 +83,7 @@ namespace Facebook.Repositories
         /// <param name="emailId">The email identifier.</param>
         /// <param name="userId">The user identifier.</param>
         /// <returns>email for forgot password and return userId.</returns>
-        public async Task<long> ForgotPassword(string emailId, long userId)
+        public async Task<long> SendTokenViaMailForForgotPassword(string emailId, long userId)
         {
             List<ValidationsModel> errors = new();
             User user = await this.db.Users.FirstOrDefaultAsync(u => u.Email.Equals(emailId.ToLower()) && u.UserId == userId && u.DeletedAt == null) ?? new User();
@@ -164,18 +165,28 @@ namespace Facebook.Repositories
         /// Updates the new password.
         /// </summary>
         /// <param name="userId">The user identifier.</param>
+        /// <param name="oldPassword">The old password.</param>
         /// <param name="updatedPassword">The updated password.</param>
-        /// <returns>return true if password successfully updated.</returns>
-        public async Task<bool> UpdateNewPassword(long userId, string updatedPassword)
+        /// <returns>
+        /// return true if password successfully updated.
+        /// </returns>
+        /// <exception cref="Facebook.CustomException.AggregateValidationException">validations for update new password.</exception>
+        public async Task<bool> ResetPassword(long userId, string oldPassword, string updatedPassword)
         {
             List<ValidationsModel> errors = new();
-            User? user = await this.db.Users.FirstOrDefaultAsync(x => x.UserId == userId && x.DeletedAt == null) ?? new User();
-            if (user.UserId == 0)
+            User? user = await this.db.Users.FirstOrDefaultAsync(x => x.UserId == userId && x.DeletedAt == null);
+            if (user == null)
                 errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "User Not Found" });
 
             bool isValidPassword = await this.userRepository.ValidatePassword(updatedPassword);
             if (!isValidPassword)
                 errors.Add(new ValidationsModel() { StatusCode = (int)HttpStatusCode.Unauthorized, ErrorMessage = "Password Incorrect." });
+
+            if (!string.IsNullOrWhiteSpace(oldPassword))
+            {
+                if (!Crypto.VerifyHashedPassword(user.Password, oldPassword))
+                    errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.Unauthorized, ErrorMessage = "Old Password Is Incorrect." });
+            }
 
             if (errors.Any())
                 throw new AggregateValidationException { Validations = errors };
@@ -232,13 +243,12 @@ namespace Facebook.Repositories
              });
          }*/
 
-
-
-
-
-
-
-        //this function Convert to Encord your Password
+        /// <summary>
+        /// Encodes the password to base64.
+        /// </summary>
+        /// <param name="password">The password.</param>
+        /// <returns>encoded password.</returns>
+        /// <exception cref="System.Exception">Error in base64Encode" + ex.Message.</exception>
         public string EncodePasswordToBase64(string password)
         {
             try
@@ -253,18 +263,22 @@ namespace Facebook.Repositories
                 throw new Exception("Error in base64Encode" + ex.Message);
             }
         }
-        //this function Convert to Decord your Password
+
+        /// <summary>
+        /// Decodes the from64.
+        /// </summary>
+        /// <param name="encodedData">The encoded data.</param>
+        /// <returns>decoded password.</returns>
         public string DecodeFrom64(string encodedData)
         {
-            System.Text.UTF8Encoding encoder = new System.Text.UTF8Encoding();
+            System.Text.UTF8Encoding encoder = new();
             System.Text.Decoder utf8Decode = encoder.GetDecoder();
             byte[] todecode_byte = Convert.FromBase64String(encodedData);
             int charCount = utf8Decode.GetCharCount(todecode_byte, 0, todecode_byte.Length);
             char[] decoded_char = new char[charCount];
             utf8Decode.GetChars(todecode_byte, 0, todecode_byte.Length, decoded_char, 0);
-            string result = new String(decoded_char);
+            string result = new(decoded_char);
             return result;
         }
-        
     }
 }

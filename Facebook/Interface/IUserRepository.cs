@@ -50,7 +50,19 @@ namespace Facebook.Interface
         /// </summary>
         /// <returns>get all all the cities.</returns>
         Task<List<City>> GetCitiesAsync();
+
+        /// <summary>
+        /// Validates the password.
+        /// </summary>
+        /// <param name="password">The password.</param>
+        /// <returns>true if valid password otherwise false.</returns>
         Task<bool> ValidatePassword(string password);
+
+        /// <summary>
+        /// Validates the email.
+        /// </summary>
+        /// <param name="emailAddress">The email address.</param>
+        /// <returns>true if valid email otherwise false.</returns>
         Task<bool> ValidateEmail(string emailAddress);
     }
 }

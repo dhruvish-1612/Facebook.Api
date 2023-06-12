@@ -1,4 +1,4 @@
-﻿// <copyright file="JwtAuthenticationModel.cs" company="PlaceholderCompany">
+﻿// <copyright file="JwtSetting.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
