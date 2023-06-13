@@ -108,5 +108,268 @@ namespace Facebook.Repositories
                 }).ToListAsync();
             return getUserPostModels;
         }
+
+        /// <summary>
+        /// Gets all user post.
+        /// </summary>
+        /// <param name="userId">The user identifier.</param>
+        /// <returns>return all the users posts.</returns>
+        public async Task<List<GetAllUserPostModel>> GetAllUserPost(long userId)
+        {
+            List<ValidationsModel> errors = new();
+            bool isUserExist = await this.iuserRequestRepository.ValidateUserById(userId);
+            if (!isUserExist)
+                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "User Not Found" });
+
+            if (errors.Any())
+                throw new AggregateValidationException { Validations = errors };
+
+            IQueryable<UserPost> query;
+
+            query = this.db.Friendships
+                .Where(friend => (friend.ProfileAccept == userId || friend.ProfileRequest == userId) && friend.IsFriend == true && friend.DeletedAt == null)
+                .SelectMany(userpost => userpost.ProfileRequestNavigation.UserPosts.Concat(userpost.ProfileAcceptNavigation.UserPosts))
+                .Where(post => post.DeletedAt == null);
+
+            if (!query.Any())
+            {
+                query = this.db.UserPosts.Where(post => post.UserId == userId && post.DeletedAt == null);
+            }
+
+            List<GetAllUserPostModel> getAllPosts = await query.Select(posts => new GetAllUserPostModel
+            {
+                Id = posts.UserPostId,
+                UserId = posts.UserId,
+                UserName = posts.User.FirstName + " " + posts.User.LastName,
+                UserAvtar = posts.User.Avatar ?? string.Empty,
+                MediaPath = posts.MediaPath,
+                WrittenText = posts.WrittenText ?? string.Empty,
+                CreatedAt = posts.CreatedAt,
+            }).OrderByDescending(sequence => sequence.CreatedAt).ToListAsync();
+
+            return getAllPosts;
+        }
+
+        /// <summary>
+        /// Deletes the post.
+        /// </summary>
+        /// <param name="postId">The post identifier.</param>
+        /// <returns>true if successfully deleted.</returns>
+        /// <exception cref="Facebook.CustomException.AggregateValidationException">for validation.</exception>
+        public async Task<bool> DeletePost(long postId)
+        {
+            List<ValidationsModel> errors = new();
+
+            UserPost? userPost = await this.db.UserPosts.FindAsync(postId);
+            if (userPost == null)
+            {
+                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "Post Is Not Found." });
+                throw new AggregateValidationException { Validations = errors };
+            }
+
+            userPost.DeletedAt = DateTime.Now;
+            this.db.UserPosts.Update(userPost);
+            await this.db.SaveChangesAsync();
+            return true;
+        }
+
+        /// <summary>
+        /// Adds the comment.
+        /// </summary>
+        /// <param name="comment">The comment.</param>
+        /// <returns>return recently added comment.</returns>
+        public async Task<GetPostCommentModel> UpsertComment(AddCommentModel comment)
+        {
+            List<ValidationsModel> errors = new();
+
+            bool isUserExist = await this.iuserRequestRepository.ValidateUserById(comment.UserId);
+            if (!isUserExist)
+                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "User Not Found." });
+            if (string.IsNullOrWhiteSpace(comment.CommentText))
+                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NoContent, ErrorMessage = "Please add Comments." });
+            if (errors.Any())
+                throw new AggregateValidationException { Validations = errors };
+
+            PostComment? postComment;
+            if (comment.UserPostCommentId == 0)
+            {
+                postComment = this.mapper.Map<PostComment>(comment);
+                this.db.PostComments.Add(postComment);
+            }
+            else
+            {
+                postComment = await this.db.PostComments.FirstOrDefaultAsync(fetchComment => fetchComment.UserPostCommentId == comment.UserPostCommentId
+                              && fetchComment.DeletedAt == null);
+                if (postComment == null)
+                {
+                    errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "this comment is not found." });
+                    throw new AggregateValidationException { Validations = errors };
+                }
+
+                if (postComment.UserId != comment.UserId)
+                    errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.Unauthorized, ErrorMessage = "Don't change User." });
+                if (errors.Any())
+                    throw new AggregateValidationException { Validations = errors };
+
+                postComment.CommentText = comment.CommentText;
+                postComment.UpdatedAt = DateTime.Now;
+                this.db.PostComments.Update(postComment);
+            }
+
+            await this.db.SaveChangesAsync();
+            return await this.GetPostCommetnById(postComment.UserPostCommentId);
+        }
+
+        /// <summary>
+        /// Deletes the comment.
+        /// </summary>
+        /// <param name="userPostCommentId">The user post comment identifier.</param>
+        /// <returns>true if successfully deleted.</returns>
+        /// <exception cref="Facebook.CustomException.AggregateValidationException">for validations.</exception>
+        public async Task<bool> DeleteComment(long userPostCommentId)
+        {
+            List<ValidationsModel> errors = new();
+            PostComment? userPostComment = await this.db.PostComments.FindAsync(userPostCommentId);
+            if (userPostComment == null)
+            {
+                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NoContent, ErrorMessage = "Please add Comments." });
+                throw new AggregateValidationException { Validations = errors };
+            }
+
+            userPostComment.DeletedAt = DateTime.Now;
+            this.db.PostComments.Update(userPostComment);
+            await this.db.SaveChangesAsync();
+            return true;
+        }
+
+        /// <summary>
+        /// Gets the post comments.
+        /// </summary>
+        /// <param name="postId">The post identifier.</param>
+        /// <returns>get all comment for that posts.</returns>
+        /// <exception cref="Facebook.CustomException.AggregateValidationException">for validatoions.</exception>
+        public async Task<List<GetPostCommentModel>> GetPostComments(long postId)
+        {
+            List<ValidationsModel> errors = new();
+            bool isPostValid = await this.ValidatePost(postId);
+            if (!isPostValid)
+            {
+                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "Post Is Not Found." });
+                throw new AggregateValidationException { Validations = errors };
+            }
+
+            List<GetPostCommentModel> getPostComments = await this.db.PostComments.Where(comment => comment.UserPostId == postId && comment.DeletedAt == null)
+                .Select(getComment => new GetPostCommentModel
+                {
+                    UserPostCommentId = getComment.UserPostCommentId,
+                    UserPostId = getComment.UserPostId,
+                    UserId = getComment.UserId,
+                    CommentedUserName = getComment.User.FirstName + " " + getComment.User.LastName,
+                    CommentedUserAvtar = getComment.User.Avatar,
+                    CommentText = getComment.CommentText,
+                    CreatedAt = getComment.CreatedAt,
+                }).OrderBy(sequence => sequence.CreatedAt).ToListAsync();
+            return getPostComments;
+        }
+
+        /// <summary>
+        /// Validates the post.
+        /// </summary>
+        /// <param name="postId">The post identifier.</param>
+        /// <returns>true if post is valid o/w false.</returns>
+        public async Task<bool> ValidatePost(long postId)
+        {
+            bool isPostExist = await Task.Run(() => this.db.UserPosts.AnyAsync(checkPost => checkPost.UserPostId == postId));
+            return isPostExist;
+        }
+
+        /// <summary>
+        /// Gets the post commetn by identifier.
+        /// </summary>
+        /// <param name="postCommentId">The post comment identifier.</param>
+        /// <returns>Get Comment By it's Id.</returns>
+        public async Task<GetPostCommentModel> GetPostCommetnById(long postCommentId)
+        {
+            GetPostCommentModel getPostComments = await this.db.PostComments.Where(comment => comment.UserPostCommentId == postCommentId && comment.DeletedAt == null)
+                .Select(getComment => new GetPostCommentModel
+                {
+                    UserPostCommentId = getComment.UserPostCommentId,
+                    UserPostId = getComment.UserPostId,
+                    UserId = getComment.UserId,
+                    CommentedUserName = getComment.User.FirstName + " " + getComment.User.LastName,
+                    CommentedUserAvtar = getComment.User.Avatar,
+                    CommentText = getComment.CommentText,
+                    CreatedAt = getComment.CreatedAt,
+                }).FirstOrDefaultAsync() ?? new GetPostCommentModel();
+            return getPostComments;
+        }
+
+        /// <summary>
+        /// Likes the or dislike post.
+        /// </summary>
+        /// <param name="userId">The user identifier.</param>
+        /// <param name="postId">The post identifier.</param>
+        /// <returns>true if successfully like and dislike.</returns>
+        /// <exception cref="Facebook.CustomException.AggregateValidationException">for validation.</exception>
+        public async Task<bool> LikeOrDislikePost(long userId, long postId)
+        {
+            List<ValidationsModel> errors = new();
+
+            bool isUserExist = await this.iuserRequestRepository.ValidateUserById(userId);
+            if (!isUserExist)
+                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "User Not Found." });
+            bool isPostValid = await this.ValidatePost(postId);
+            if (!isPostValid)
+                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "Post Is Not Found." });
+            if (errors.Any())
+                throw new AggregateValidationException { Validations = errors };
+            PostLike postLike = await this.db.PostLikes.FirstOrDefaultAsync(like => like.LikeUserId == userId && like.UserPostId == postId) ?? new PostLike();
+
+            if (postLike.UserPostLikeId == 0)
+            {
+                postLike.LikeUserId = userId;
+                postLike.LikeStatus = true;
+                postLike.UserPostId = postId;
+                postLike.LikeDate = DateTime.Now;
+                this.db.PostLikes.Add(postLike);
+            }
+            else
+            {
+                postLike.LikeStatus = postLike.LikeStatus == false ? true : false;
+                postLike.LikeDate = DateTime.Now;
+                this.db.PostLikes.Update(postLike);
+            }
+
+            await this.db.SaveChangesAsync();
+            return true;
+        }
+
+        /// <summary>
+        /// Gets the post likes.
+        /// </summary>
+        /// <param name="postId">The post identifier.</param>
+        /// <returns>get likes of that post.</returns>
+        public async Task<List<GetUserPostLikeModel>> GetPostLikes(long postId)
+        {
+            List<ValidationsModel> errors = new();
+
+            bool isPostValid = await this.ValidatePost(postId);
+            if (!isPostValid)
+                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "Post Is Not Found." });
+            if (errors.Any())
+                throw new AggregateValidationException { Validations = errors };
+
+            List<GetUserPostLikeModel> getUserPostLikes = await this.db.PostLikes.Where(like => like.UserPostId == postId && like.LikeStatus == true)
+                .Select(getLike => new GetUserPostLikeModel
+                {
+                    UserPostLikeId = getLike.UserPostId,
+                    UserPostId = getLike.UserPostId,
+                    LikedUserId = getLike.LikeUserId,
+                    LikedUserName = getLike.LikeUser.FirstName + " " + getLike.LikeUser.LastName,
+                    LikedUserAvtar = getLike.LikeUser.Avatar,
+                    CreatedAt = getLike.LikeDate,
+                }).ToListAsync();
+            return getUserPostLikes;
+        }
     }
 }

@@ -21,6 +21,7 @@ namespace Facebook.Helpers
             this.CreateMap<User, UserModel>().ReverseMap();
             this.CreateMap<UserPost, GetUserPostModel>().ReverseMap();
             this.CreateMap<StoryModel, Story>().ReverseMap();
+            this.CreateMap<AddCommentModel, PostComment>().ReverseMap();
         }
     }
 }

@@ -22,18 +22,16 @@ namespace Facebook.Repositories
     {
         private readonly FacebookContext db;
         private readonly IMapper mapper;
-        private readonly IUserRequestRepository userRequestRepository;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UserRepository" /> class.
         /// </summary>
         /// <param name="facebookContext">The facebook context.</param>
         /// <param name="mapper">The mapper.</param>
-        public UserRepository(FacebookContext facebookContext, IMapper mapper, IUserRequestRepository userRequestRepository)
+        public UserRepository(FacebookContext facebookContext, IMapper mapper)
         {
             this.db = facebookContext;
             this.mapper = mapper;
-            this.userRequestRepository = userRequestRepository;
         }
 
         /// <summary>

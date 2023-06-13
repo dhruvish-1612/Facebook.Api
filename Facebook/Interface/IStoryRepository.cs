@@ -24,6 +24,6 @@ namespace Facebook.Interface
         /// </summary>
         /// <param name="userId">The user identifier.</param>
         /// <returns>get all the stories.</returns>
-        Task<List<GetAllStoriesForUserModel>> GetAllStoriesForUserAsync(long userId);
+        Task<List<GetAllUserPostModel>> GetAllStoriesForUserAsync(long userId);
     }
 }

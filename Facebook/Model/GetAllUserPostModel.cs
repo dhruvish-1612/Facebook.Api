@@ -7,7 +7,7 @@ namespace Facebook.Model
     /// <summary>
     /// get all stories for that user.
     /// </summary>
-    public class GetAllStoriesForUserModel
+    public class GetAllUserPostModel
     {
         /// <summary>
         /// Gets or sets the story identifier.
@@ -15,7 +15,7 @@ namespace Facebook.Model
         /// <value>
         /// The story identifier.
         /// </value>
-        public long StoryId { get; set; }
+        public long Id { get; set; }
 
         /// <summary>
         /// Gets or sets the user identifier.

@@ -5,7 +5,7 @@ namespace Facebook.Infrastructure.Infrastructure;
 
 public partial class PostLike
 {
-    public long UserPostLikeId { get; set; }
+    public long UserPostLikeId { get; set; }    
 
     public long UserPostId { get; set; }
 
