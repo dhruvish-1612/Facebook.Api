@@ -45,10 +45,10 @@ namespace Facebook.Repositories
             List<ValidationsModel> errors = new();
             bool isUserExist = await this.iuserRequestRepository.ValidateUserById(posts.UserId);
             if (!isUserExist)
-                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "User Not Found" });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "User Not Found"));
 
             if (posts.Posts.Count == 0)
-                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.Unauthorized, ErrorMessage = "Atleast Select One Posts." });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.Unauthorized, "Atleast Select One Posts."));
 
             if (errors.Any())
                 throw new AggregateValidationException { Validations = errors };
@@ -119,7 +119,7 @@ namespace Facebook.Repositories
             List<ValidationsModel> errors = new();
             bool isUserExist = await this.iuserRequestRepository.ValidateUserById(userId);
             if (!isUserExist)
-                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "User Not Found" });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "User Not Found"));
 
             if (errors.Any())
                 throw new AggregateValidationException { Validations = errors };
@@ -232,7 +232,7 @@ namespace Facebook.Repositories
             PostComment? userPostComment = await this.db.PostComments.FindAsync(userPostCommentId);
             if (userPostComment == null)
             {
-                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NoContent, ErrorMessage = "Please add Comments." });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.NoContent, "Please add Comments."));
                 throw new AggregateValidationException { Validations = errors };
             }
 
@@ -254,7 +254,7 @@ namespace Facebook.Repositories
             bool isPostValid = await this.ValidatePost(postId);
             if (!isPostValid)
             {
-                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "Post Is Not Found." });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "Post Is Not Found."));
                 throw new AggregateValidationException { Validations = errors };
             }
 
@@ -317,10 +317,10 @@ namespace Facebook.Repositories
 
             bool isUserExist = await this.iuserRequestRepository.ValidateUserById(userId);
             if (!isUserExist)
-                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "User Not Found." });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "User Not Found."));
             bool isPostValid = await this.ValidatePost(postId);
             if (!isPostValid)
-                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "Post Is Not Found." });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "Post Is Not Found."));
             if (errors.Any())
                 throw new AggregateValidationException { Validations = errors };
             PostLike postLike = await this.db.PostLikes.FirstOrDefaultAsync(like => like.LikeUserId == userId && like.UserPostId == postId) ?? new PostLike();
@@ -355,7 +355,7 @@ namespace Facebook.Repositories
 
             bool isPostValid = await this.ValidatePost(postId);
             if (!isPostValid)
-                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "Post Is Not Found." });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "Post Is Not Found."));
             if (errors.Any())
                 throw new AggregateValidationException { Validations = errors };
 

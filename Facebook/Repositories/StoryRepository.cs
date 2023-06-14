@@ -4,7 +4,6 @@
 
 namespace Facebook.Repositories
 {
-    using System.Globalization;
     using System.Net;
     using AutoMapper;
     using Facebook.CustomException;
@@ -45,10 +44,10 @@ namespace Facebook.Repositories
             List<ValidationsModel> errors = new();
             bool isUserExist = await this.userRequestRepository.ValidateUserById(story.UserId);
             if (!isUserExist)
-                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "User Not Found" });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "User Not Found"));
 
             if (story.Media == null)
-                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.Unauthorized, ErrorMessage = "Atleast Select One Posts." });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.Unauthorized, "Atleast Select One Posts."));
 
             if (errors.Any())
                 throw new AggregateValidationException { Validations = errors };
@@ -95,7 +94,7 @@ namespace Facebook.Repositories
             List<ValidationsModel> errors = new();
             bool isUserExist = await this.userRequestRepository.ValidateUserById(userId);
             if (!isUserExist)
-                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "User Not Found" });
+                errors.Add(new ValidationsModel ((int)HttpStatusCode.NotFound, "User Not Found"));
 
             if (errors.Any())
                 throw new AggregateValidationException { Validations = errors };
@@ -109,8 +108,7 @@ namespace Facebook.Repositories
 
             if (!query.Any())
             {
-                query = this.db.Stories
-                .Where(story => story.UserId == userId && story.CreatedAt >= thresholdTime);
+                query = this.db.Stories.Where(story => story.UserId == userId && story.CreatedAt >= thresholdTime);
             }
 
             List<GetAllUserPostModel> getAllStoriesForUserModels = await query.Select(story => new GetAllUserPostModel

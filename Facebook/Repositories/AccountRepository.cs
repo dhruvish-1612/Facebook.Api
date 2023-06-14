@@ -62,12 +62,12 @@ namespace Facebook.Repositories
             bool isValidEmail = await this.userRepository.ValidateEmail(loginParams.Email);
             bool isVaildPassword = await this.userRepository.ValidatePassword(loginParams.Password);
             if (!isValidEmail || !isVaildPassword)
-                errors.Add(new ValidationsModel() { StatusCode = (int)HttpStatusCode.Unauthorized, ErrorMessage = "Email Or Password Incorrect." });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.Unauthorized, "Email Or Password Incorrect."));
 
             User existUser = await this.db.Users.FirstOrDefaultAsync(user => user.Email.Equals(loginParams.Email.ToLower())) ?? new User();
 
             if (existUser.UserId == 0 && !Crypto.VerifyHashedPassword(loginParams.Password, existUser.Password))
-                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "Email or Password Not Found." });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "Email or Password Not Found."));
 
             if (errors.Any())
                 throw new AggregateValidationException { Validations = errors };
@@ -83,13 +83,13 @@ namespace Facebook.Repositories
         /// <param name="emailId">The email identifier.</param>
         /// <param name="userId">The user identifier.</param>
         /// <returns>email for forgot password and return userId.</returns>
-        public async Task<long> SendTokenViaMailForForgotPassword(string emailId, long userId)
+        public async Task<long> SendTokenViaMailForForgotPassword(string emailId)
         {
             List<ValidationsModel> errors = new();
-            User user = await this.db.Users.FirstOrDefaultAsync(u => u.Email.Equals(emailId.ToLower()) && u.UserId == userId && u.DeletedAt == null) ?? new User();
+            User user = await this.db.Users.FirstOrDefaultAsync(u => u.Email.Equals(emailId.ToLower()) && u.DeletedAt == null) ?? new User();
 
             if (user.UserId == 0)
-                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "User Of This EmailAddress Not Exist" });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "User Of This EmailAddress Not Exist"));
 
             if (errors.Any())
                 throw new AggregateValidationException { Validations = errors };
@@ -99,7 +99,7 @@ namespace Facebook.Repositories
             this.SendTokenMail(emailId, (string)finalString);
 
             ForgotPassword entry = new();
-            entry.UserId = userId;
+            entry.UserId = user.UserId;
             entry.Token = finalString;
             entry.CreatedAt = DateTime.Now;
             this.db.ForgotPasswords.Add(entry);
@@ -176,16 +176,16 @@ namespace Facebook.Repositories
             List<ValidationsModel> errors = new();
             User? user = await this.db.Users.FirstOrDefaultAsync(x => x.UserId == userId && x.DeletedAt == null);
             if (user == null)
-                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "User Not Found" });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "User Not Found"));
 
             bool isValidPassword = await this.userRepository.ValidatePassword(updatedPassword);
             if (!isValidPassword)
-                errors.Add(new ValidationsModel() { StatusCode = (int)HttpStatusCode.Unauthorized, ErrorMessage = "Password Incorrect." });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.Unauthorized, "Password Incorrect."));
 
             if (!string.IsNullOrWhiteSpace(oldPassword))
             {
                 if (!Crypto.VerifyHashedPassword(user.Password, oldPassword))
-                    errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.Unauthorized, ErrorMessage = "Old Password Is Incorrect." });
+                    errors.Add(new ValidationsModel((int)HttpStatusCode.Unauthorized, "Old Password Is Incorrect."));
             }
 
             if (errors.Any())

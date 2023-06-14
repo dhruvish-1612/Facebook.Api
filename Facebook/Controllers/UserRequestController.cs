@@ -9,6 +9,7 @@ namespace Facebook.Controllers
     using Facebook.CustomException;
     using Facebook.Interface;
     using Facebook.Model;
+    using Facebook.ParameterModel;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
 
@@ -94,17 +95,17 @@ namespace Facebook.Controllers
         /// <summary>
         /// Gets the reques dted users.
         /// </summary>
-        /// <param name="userId">The user identifier.</param>
-        /// <param name="filter">The filter.</param>
-        /// <param name="requestType">Type of the request.</param>
-        /// <returns>fde.</returns>
+        /// <param name="getRequestedUserParam">The get requested user parameter.</param>
+        /// <returns>
+        /// GetRequestedUsers.
+        /// </returns>
         [AllowAnonymous]
         [HttpGet]
-        public async Task<IActionResult> GetRequestedUsers(long userId, int filter, int requestType)
+        public async Task<IActionResult> GetRequestedUsers(GetRequestedUserParam getRequestedUserParam)
         {
             try
             {
-                return this.Ok(await this.userRequestRepository.GetRequestedUsersAsync(userId, filter, requestType));
+                return this.Ok(await this.userRequestRepository.GetRequestedUsersAsync(getRequestedUserParam.UserId, getRequestedUserParam.Filter, getRequestedUserParam.RequestType));
             }
             catch (AggregateValidationException ex)
             {

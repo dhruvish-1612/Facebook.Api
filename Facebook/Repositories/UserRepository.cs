@@ -56,7 +56,7 @@ namespace Facebook.Repositories
             UserModel userModel = new();
             if (user == null)
             {
-                validationErrors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "User Not Found" });
+                validationErrors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "User Not Found"));
                 throw new AggregateValidationException { Validations = validationErrors };
             }
 
@@ -116,10 +116,10 @@ namespace Facebook.Repositories
             bool validEmail = await this.ValidateEmail(user.Email.ToLower());
             bool validPassword = await this.ValidatePassword(user.Password);
             if (!validEmail && !validPassword)
-                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.Unauthorized, ErrorMessage = "Not Valid Email. Please Enter Valid Email like dhruvish12@gmail.com" });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.Unauthorized, "Not Valid Email. Please Enter Valid Email like dhruvish12@gmail.com"));
 
             if (isUserExist)
-                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.Unauthorized, ErrorMessage = "Email Or Phonenumber Already Exist." });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.Unauthorized, "Email Or Phonenumber Already Exist."));
 
             if (errors.Any())
                 throw new AggregateValidationException { Validations = errors };
@@ -150,20 +150,16 @@ namespace Facebook.Repositories
 
             if (existingUser == null)
             {
-                errors.Add(new ValidationsModel() { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "User Not Found" });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "User Not Found"));
                 throw new AggregateValidationException { Validations = errors };
             }
 
             bool isValidPassword = await this.ValidatePassword(user.Password);
             if (!isValidPassword)
-            {
-                errors.Add(new ValidationsModel() { StatusCode = (int)HttpStatusCode.Unauthorized, ErrorMessage = "Incorrect Password." });
-            }
+                errors.Add(new ValidationsModel((int)HttpStatusCode.Unauthorized, "Incorrect Password."));
 
             if (existingUser.Email != user.Email.ToLower())
-            {
-                errors.Add(new ValidationsModel() { StatusCode = (int)HttpStatusCode.Conflict, ErrorMessage = "You Do Not Change Your Email." });
-            }
+                errors.Add(new ValidationsModel((int)HttpStatusCode.Conflict, "You Do Not Change Your Email."));
 
             if (errors.Any())
                 throw new AggregateValidationException { Validations = errors };
@@ -196,7 +192,7 @@ namespace Facebook.Repositories
             UserModel deleteUserObj = new();
             if (userToDelete == null)
             {
-                validationErrors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "User Not Found" });
+                validationErrors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "User Not Found"));
                 throw new AggregateValidationException { Validations = validationErrors };
             }
 

@@ -4,8 +4,8 @@
 
 namespace Facebook.Interface
 {
-    using Facebook.Model;
     using System.Collections.Generic;
+    using Facebook.Model;
 
     /// <summary>
     /// story interface.

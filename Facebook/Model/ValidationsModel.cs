@@ -18,5 +18,23 @@ namespace Facebook.Model
         /// <summary>Gets or sets the error message.</summary>
         /// <value>The error message.</value>
         public string? ErrorMessage { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ValidationsModel" /> class.
+        /// </summary>
+        /// <param name="statusCode">The status code.</param>
+        /// <param name="errorMessage">The error message.</param>
+        public ValidationsModel(int statusCode, string errorMessage)
+        {
+            this.StatusCode = statusCode;
+            this.ErrorMessage = errorMessage;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ValidationsModel"/> class.
+        /// </summary>
+        public ValidationsModel()
+        {
+        }
     }
 }

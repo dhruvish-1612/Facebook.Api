@@ -48,7 +48,6 @@ namespace Facebook.Controllers
         /// <param name="userId">The user identifier.</param>
         /// <returns>getting all users posts.</returns>
         [HttpGet("GetAllPosts")]
-
         public async Task<IActionResult> GetAllUserPost(long userId)
         {
             return this.Ok(await this.userSocialActivitiesRepository.GetAllUserPost(userId));

@@ -4,7 +4,6 @@
 
 namespace Facebook.Interface
 {
-    using Facebook.Infrastructure.Infrastructure;
     using Facebook.Model;
 
     /// <summary>
@@ -18,7 +17,7 @@ namespace Facebook.Interface
         /// <param name="emailId">The email identifier.</param>
         /// <param name="userId">The user identifier.</param>
         /// <returns>UserId.</returns>
-        Task<long> SendTokenViaMailForForgotPassword(string emailId, long userId);
+        Task<long> SendTokenViaMailForForgotPassword(string emailId);
 
         /// <summary>
         /// Sends the token mail.
@@ -49,8 +48,11 @@ namespace Facebook.Interface
         /// Updates the new password.
         /// </summary>
         /// <param name="userId">The user identifier.</param>
+        /// <param name="oldPassword">The old password.</param>
         /// <param name="updatedPassword">The updated password.</param>
-        /// <returns>return true if successfully password changed.</returns>
+        /// <returns>
+        /// return true if successfully password changed.
+        /// </returns>
         Task<bool> ResetPassword(long userId, string oldPassword, string updatedPassword);
 
         /// <summary>

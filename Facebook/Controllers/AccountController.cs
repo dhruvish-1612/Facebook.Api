@@ -7,6 +7,7 @@ namespace Facebook.Controllers
     using Facebook.CustomException;
     using Facebook.Interface;
     using Facebook.Model;
+    using Facebook.ParameterModel;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
 
@@ -38,7 +39,7 @@ namespace Facebook.Controllers
         /// <returns>user object if successfully login.</returns>
         [AllowAnonymous]
         [HttpPost]
-        public async Task<IActionResult> UserLogin([FromForm] LoginParams loginParams)
+        public async Task<IActionResult> UserLogin([FromBody] LoginParams loginParams)
         {
             try
             {
@@ -58,11 +59,11 @@ namespace Facebook.Controllers
         /// <returns> UserId. </returns>
         [AllowAnonymous]
         [HttpGet]
-        public async Task<IActionResult> SendTokenViaMailForForgotPassword(string emailId, long userId)
+        public async Task<IActionResult> SendTokenViaMailForForgotPassword(string emailId)
         {
             try
             {
-                return this.Ok(await this.accountRepository.SendTokenViaMailForForgotPassword(emailId, userId));
+                return this.Ok(await this.accountRepository.SendTokenViaMailForForgotPassword(emailId));
             }
             catch (AggregateValidationException ex)
             {
@@ -93,17 +94,17 @@ namespace Facebook.Controllers
         /// <summary>
         /// Updates the new password.
         /// </summary>
-        /// <param name="userId">The user identifier.</param>
-        /// <param name="oldPassword">The older password.</param>
-        /// <param name="updatedPassword">The updated password.</param>
-        /// <returns>return true if successfully update the password.</returns>
+        /// <param name="resetPasswordParam">The reset password parameter.</param>
+        /// <returns>
+        /// return true if successfully update the password.
+        /// </returns>
         [AllowAnonymous]
         [HttpPatch]
-        public async Task<IActionResult> ResetPassword(long userId, string oldPassword, string updatedPassword)
+        public async Task<IActionResult> ResetPassword([FromBody]ResetPasswordParam resetPasswordParam)
         {
             try
             {
-                return this.Ok(await this.accountRepository.ResetPassword(userId, oldPassword, updatedPassword));
+                return this.Ok(await this.accountRepository.ResetPassword(resetPasswordParam.UserId, resetPasswordParam.OldPassword, resetPasswordParam.UpdatedPassword));
             }
             catch (AggregateValidationException ex)
             {

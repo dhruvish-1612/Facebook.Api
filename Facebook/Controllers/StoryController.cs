@@ -6,7 +6,6 @@ namespace Facebook.Controllers
     using Facebook.CustomException;
     using Facebook.Interface;
     using Facebook.Model;
-    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
 
     /// <summary>
@@ -46,6 +45,11 @@ namespace Facebook.Controllers
             }
         }
 
+        /// <summary>
+        /// Gets all stories for user asynchronous.
+        /// </summary>
+        /// <param name="userId">The user identifier.</param>
+        /// <returns>get all stories for that users.</returns>
         [HttpGet("getStoryForThatUser")]
         public async Task<IActionResult> GetAllStoriesForUserAsync(long userId)
         {
@@ -53,7 +57,7 @@ namespace Facebook.Controllers
             {
                 return this.Ok(await this.storyRepository.GetAllStoriesForUserAsync(userId));
             }
-            catch(AggregateValidationException ex)
+            catch (AggregateValidationException ex)
             {
                 return this.BadRequest(ex.Validations);
             }

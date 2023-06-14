@@ -59,7 +59,7 @@ namespace Facebook.Repositories
 
             if (friendshipModel == null)
             {
-                errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "friend request not found" });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "friend request not found"));
                 throw new AggregateValidationException { Validations = errors };
             }
 
@@ -89,7 +89,7 @@ namespace Facebook.Repositories
             {
                 if (friendObj.Status == (int)FrienshipEnum.Request_Accepted || friendObj.Status == (int)FrienshipEnum.Request_Pending)
                 {
-                    errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.Conflict, ErrorMessage = "Already Friend Request has been Sent." });
+                    errors.Add(new ValidationsModel((int)HttpStatusCode.Conflict, "Already Friend Request has been Sent."));
                     throw new AggregateValidationException { Validations = errors };
                 }
                 else
@@ -119,15 +119,15 @@ namespace Facebook.Repositories
             List<ValidationsModel> errors = new();
 
             if ((acceptUserId == 0 || requestUserId == 0) || acceptUserId == requestUserId)
-                errors.Add(new ValidationsModel() { StatusCode = 401, ErrorMessage = "You Enter Wrong Accepted and Requested UserId or same Ids" });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.Conflict, "You Enter Wrong Accepted and Requested UserId or same Ids"));
 
             bool isValidAcceptedUserId = await this.ValidateUserById(acceptUserId);
             if (!isValidAcceptedUserId)
-                errors.Add(new ValidationsModel() { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "Accepted UserId Not Exist" });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "Accepted UserId Not Exist"));
 
             bool isValidRequestedUserId = await this.ValidateUserById(requestUserId);
             if (!isValidRequestedUserId)
-                errors.Add(new ValidationsModel() { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "Requested UserId Not Exist" });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "Requested UserId Not Exist"));
 
             // check already both are friends
             if (errors.Any())
@@ -147,10 +147,10 @@ namespace Facebook.Repositories
             bool isValidFriendship = await this.ValidateFriendRequestById(friendshipId);
 
             if (friendship.FriendshipId == 0)
-                validationsMessage.Add(new ValidationsModel() { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "This Friend Request Is Not Found." });
+                validationsMessage.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "This Friend Request Is Not Found."));
 
             if (identity != (int)FrienshipEnum.Request_Accepted && identity != (int)FrienshipEnum.Request_Rejected)
-                validationsMessage.Add(new ValidationsModel() { StatusCode = (int)HttpStatusCode.Unauthorized, ErrorMessage = "please enter correct identity" });
+                validationsMessage.Add(new ValidationsModel((int)HttpStatusCode.Unauthorized, "please enter correct identity"));
 
             if (validationsMessage.Any())
                 throw new AggregateValidationException { Validations = validationsMessage };
@@ -207,13 +207,13 @@ namespace Facebook.Repositories
             List<ValidationsModel> errors = new();
             bool isValidUser = await this.ValidateUserById(userId);
             if (!isValidUser)
-                errors.Add(new ValidationsModel() { StatusCode = (int)HttpStatusCode.NotFound, ErrorMessage = "User Not Found" });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "User Not Found"));
 
             if (requestStatus != (int)FrienshipEnum.Request_Accepted && requestStatus != (int)FrienshipEnum.Request_Rejected && requestStatus != (int)FrienshipEnum.Request_Pending)
-                errors.Add(new ValidationsModel() { StatusCode = (int)HttpStatusCode.Unauthorized, ErrorMessage = $"please enter {(int)FrienshipEnum.Request_Pending} for check pending request and {(int)FrienshipEnum.Request_Accepted} for your accepted request  and {(int)FrienshipEnum.Request_Pending} for your requested request" });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.Unauthorized, $"please enter {(int)FrienshipEnum.Request_Pending} for check pending request and {(int)FrienshipEnum.Request_Accepted} for your accepted request  and {(int)FrienshipEnum.Request_Pending} for your requested request"));
 
             if (requestType != 0 && requestType != (int)RequestTypeEnum.Is_Received && requestType != (int)RequestTypeEnum.Is_Sent)
-                errors.Add(new ValidationsModel() { StatusCode = (int)HttpStatusCode.Unauthorized, ErrorMessage = $"please enter {(int)RequestTypeEnum.Is_Received} for check received request and {RequestTypeEnum.Is_Sent} for your sent request" });
+                errors.Add(new ValidationsModel((int)HttpStatusCode.Unauthorized, $"please enter {(int)RequestTypeEnum.Is_Received} for check received request and {RequestTypeEnum.Is_Sent} for your sent request"));
 
             if (errors.Any())
                 throw new AggregateValidationException { Validations = errors };
