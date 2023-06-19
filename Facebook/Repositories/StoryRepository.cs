@@ -94,7 +94,7 @@ namespace Facebook.Repositories
             List<ValidationsModel> errors = new();
             bool isUserExist = await this.userRequestRepository.ValidateUserById(userId);
             if (!isUserExist)
-                errors.Add(new ValidationsModel ((int)HttpStatusCode.NotFound, "User Not Found"));
+                errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "User Not Found"));
 
             if (errors.Any())
                 throw new AggregateValidationException { Validations = errors };
@@ -102,9 +102,9 @@ namespace Facebook.Repositories
             DateTime thresholdTime = DateTime.Now.AddDays(-1);
             IQueryable<Story> query;
             query = this.db.Friendships.Where(friend => (friend.ProfileAccept == userId || friend.ProfileRequest == userId)
-                && friend.DeletedAt == null && friend.IsFriend == true)
-                .SelectMany(friend => friend.ProfileAcceptNavigation.Stories.Concat(friend.ProfileRequestNavigation.Stories))
-                .Where(checkStoryTime => checkStoryTime.CreatedAt >= thresholdTime);
+                    && friend.DeletedAt == null && friend.IsFriend == true)
+                   .SelectMany(friend => friend.ProfileAcceptNavigation.Stories.Concat(friend.ProfileRequestNavigation.Stories))
+                   .Where(checkStoryTime => checkStoryTime.CreatedAt >= thresholdTime);
 
             if (!query.Any())
             {
@@ -117,12 +117,35 @@ namespace Facebook.Repositories
                 UserId = story.UserId,
                 UserName = story.User.FirstName + " " + story.User.LastName,
                 UserAvtar = story.User.Avatar ?? string.Empty,
-                MediaPath = story.MediaPath,
+               // MediaPath = story.MediaPath,
                 WrittenText = story.WrittenText,
                 CreatedAt = story.CreatedAt,
             }).OrderByDescending(user => user.UserId == userId).ToListAsync();
 
             return getAllStoriesForUserModels;
+        }
+
+        /// <summary>
+        /// Deltes the story.
+        /// </summary>
+        /// <param name="storyId">The story identifier.</param>
+        /// <returns>true if story is delted successfully.</returns>
+        /// <exception cref="Facebook.CustomException.AggregateValidationException">for validations.</exception>
+        public async Task<bool> DeleteStory(long storyId)
+        {
+            List<ValidationsModel> errors = new();
+
+            Story? story = await this.db.Stories.FindAsync(storyId);
+            if (story == null)
+            {
+                errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "Story Is Not Found."));
+                throw new AggregateValidationException { Validations = errors };
+            }
+
+            story.DeletedAt = DateTime.Now;
+            this.db.Stories.Update(story);
+            await this.db.SaveChangesAsync();
+            return true;
         }
     }
 }

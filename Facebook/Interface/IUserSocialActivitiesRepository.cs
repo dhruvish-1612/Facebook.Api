@@ -66,6 +66,6 @@ namespace Facebook.Interface
         /// </summary>
         /// <param name="postId">The post identifier.</param>
         /// <returns>get post likes.</returns>
-        Task<List<GetUserPostLikeModel>> GetPostLikes(long postId);
+        Task<GetUserPostLikeWithCountModel> GetPostLikes(long postId);
     }
 }

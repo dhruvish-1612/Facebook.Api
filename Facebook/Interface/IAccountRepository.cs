@@ -15,7 +15,6 @@ namespace Facebook.Interface
         /// Forgots the password.
         /// </summary>
         /// <param name="emailId">The email identifier.</param>
-        /// <param name="userId">The user identifier.</param>
         /// <returns>UserId.</returns>
         Task<long> SendTokenViaMailForForgotPassword(string emailId);
 

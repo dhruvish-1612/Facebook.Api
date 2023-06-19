@@ -23,7 +23,7 @@ namespace Facebook.ParameterModel
         /// <value>
         /// The old password.
         /// </value>
-        public string? OldPassword { get; set; }
+        public string OldPassword { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the updated password.

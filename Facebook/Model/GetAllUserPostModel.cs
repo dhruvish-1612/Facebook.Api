@@ -1,4 +1,4 @@
-﻿// <copyright file="GetAllStoriesForUserModel.cs" company="PlaceholderCompany">
+﻿// <copyright file="GetAllUserPostModel.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 
@@ -40,6 +40,7 @@ namespace Facebook.Model
         /// The user avtar.
         /// </value>
         public string UserAvtar { get; set; } = string.Empty;
+
         /// <summary>
         /// Gets or sets the text.
         /// </summary>
@@ -49,12 +50,12 @@ namespace Facebook.Model
         public string? WrittenText { get; set; }
 
         /// <summary>
-        /// Gets or sets the media path.
+        /// Gets or sets the post media with types.
         /// </summary>
         /// <value>
-        /// The media path.
+        /// The post media with types.
         /// </value>
-        public string MediaPath { get; set; } = null!;
+        public IEnumerable<PostsWithTypes>? PostMediaWithTypes { get; set; }
 
         /// <summary>
         /// Gets or sets the created at.

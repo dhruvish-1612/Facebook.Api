@@ -1,4 +1,4 @@
-﻿// <copyright file="GetRequestedUser.cs" company="PlaceholderCompany">
+﻿// <copyright file="GetRequestedUserParam.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
 

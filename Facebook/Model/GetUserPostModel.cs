@@ -23,14 +23,14 @@ namespace Facebook.Model
         /// <value>
         /// The post text.
         /// </value>
-        public string? WrittenText { get; set; }
+        public string? Description { get; set; }
 
         /// <summary>
-        /// Gets or sets the media path.
+        /// Gets or sets the post media with types.
         /// </summary>
         /// <value>
-        /// The media path.
+        /// The post media with types.
         /// </value>
-        public string MediaPath { get; set; } = null!;
+        public List<PostsWithTypes> PostMediaWithTypes { get; set; } = new List<PostsWithTypes>();
     }
 }

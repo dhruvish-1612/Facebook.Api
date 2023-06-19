@@ -9,11 +9,7 @@ public partial class UserPost
 
     public long UserId { get; set; }
 
-    public string? WrittenText { get; set; }
-
-    public string MediaPath { get; set; } = null!;
-
-    public string? MediaType { get; set; }
+    public string? Description { get; set; }
 
     public DateTime CreatedAt { get; set; }
 
@@ -24,6 +20,8 @@ public partial class UserPost
     public virtual ICollection<PostComment> PostComments { get; set; } = new List<PostComment>();
 
     public virtual ICollection<PostLike> PostLikes { get; set; } = new List<PostLike>();
+
+    public virtual ICollection<PostsMedium> PostsMedia { get; set; } = new List<PostsMedium>();
 
     public virtual User User { get; set; } = null!;
 }

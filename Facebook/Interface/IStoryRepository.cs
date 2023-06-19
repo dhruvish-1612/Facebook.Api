@@ -20,6 +20,13 @@ namespace Facebook.Interface
         Task<StoryModel> AddStoryByUser(GetStoryModel story);
 
         /// <summary>
+        /// Deltes the story.
+        /// </summary>
+        /// <param name="storyId">The story identifier.</param>
+        /// <returns>true if story is delted.</returns>
+        Task<bool> DeleteStory(long storyId);
+
+        /// <summary>
         /// Gets all stories for user asynchronous.
         /// </summary>
         /// <param name="userId">The user identifier.</param>

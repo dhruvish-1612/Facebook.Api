@@ -47,24 +47,48 @@ namespace Facebook.Repositories
             if (!isUserExist)
                 errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "User Not Found"));
 
-            if (posts.Posts.Count == 0)
-                errors.Add(new ValidationsModel((int)HttpStatusCode.Unauthorized, "Atleast Select One Posts."));
+            if (!posts.Posts.Any() && string.IsNullOrWhiteSpace(posts.PostText))
+                errors.Add(new ValidationsModel((int)HttpStatusCode.Unauthorized, "No Posts Or Description Provided."));
 
             if (errors.Any())
                 throw new AggregateValidationException { Validations = errors };
 
-            List<PostsWithTypes> postsWithTypes = await this.SavePostsToFolder(posts.Posts);
-            List<GetUserPostModel> userPosts = postsWithTypes.Select(postsWithTypes => new GetUserPostModel
+            UserPost userPost = new()
             {
                 UserId = posts.UserId,
-                MediaPath = postsWithTypes.MediaName,
-                WrittenText = posts.PostText,
-            }).ToList();
-
-            List<UserPost> saveUserPost = this.mapper.Map<List<UserPost>>(userPosts);
-            await this.db.UserPosts.AddRangeAsync(saveUserPost);
+                Description = posts.PostText,
+            };
+            await this.db.UserPosts.AddAsync(userPost);
             await this.db.SaveChangesAsync();
-            return userPosts;
+
+            List<PostMediaModel> userMediaPosts = new();
+            List<PostsWithTypes> postsWithTypes = new();
+            if (posts.Posts.Any())
+            {
+                postsWithTypes = await this.SavePostsToFolder(posts.Posts);
+                userMediaPosts = postsWithTypes.Select(postsWithTypes => new PostMediaModel
+                {
+                    UserPostId = userPost.UserPostId,
+                    MediaPath = postsWithTypes.MediaName,
+                    MediaType = postsWithTypes.MediaType,
+                }).ToList();
+
+                List<PostsMedium> postsMedium = this.mapper.Map<List<PostsMedium>>(userMediaPosts);
+                await this.db.PostsMedia.AddRangeAsync(postsMedium);
+                await this.db.SaveChangesAsync();
+            }
+
+            List<GetUserPostModel> getUsersPosts = new()
+            {
+                new GetUserPostModel
+                {
+                    UserId = posts.UserId,
+                    Description = posts.PostText,
+                    PostMediaWithTypes = postsWithTypes,
+                },
+            };
+
+            return getUsersPosts;
         }
 
         /// <summary>
@@ -103,8 +127,12 @@ namespace Facebook.Repositories
                 .Select(userPost => new GetUserPostModel
                 {
                     UserId = userId,
-                    WrittenText = userPost.WrittenText ?? string.Empty,
-                    MediaPath = userPost.MediaPath,
+                    Description = userPost.Description ?? string.Empty,
+                    PostMediaWithTypes = userPost.PostsMedia.Select(media => new PostsWithTypes
+                    {
+                        MediaName = media.MediaPath ?? string.Empty,
+                        MediaType = media.MediaType ?? string.Empty,
+                    }).ToList(),
                 }).ToListAsync();
             return getUserPostModels;
         }
@@ -129,23 +157,28 @@ namespace Facebook.Repositories
             query = this.db.Friendships
                 .Where(friend => (friend.ProfileAccept == userId || friend.ProfileRequest == userId) && friend.IsFriend == true && friend.DeletedAt == null)
                 .SelectMany(userpost => userpost.ProfileRequestNavigation.UserPosts.Concat(userpost.ProfileAcceptNavigation.UserPosts))
-                .Where(post => post.DeletedAt == null);
+                .Where(post => post.DeletedAt == null).Include(user => user.User);
 
             if (!query.Any())
             {
                 query = this.db.UserPosts.Where(post => post.UserId == userId && post.DeletedAt == null);
             }
 
-            List<GetAllUserPostModel> getAllPosts = await query.Select(posts => new GetAllUserPostModel
+            List<UserPost> userPosts = await query.ToListAsync();
+            List<GetAllUserPostModel> getAllPosts = userPosts.Select(posts => new GetAllUserPostModel
             {
                 Id = posts.UserPostId,
                 UserId = posts.UserId,
-                UserName = posts.User.FirstName + " " + posts.User.LastName,
+                UserName = $"{posts.User.FirstName} {posts.User.LastName}",
                 UserAvtar = posts.User.Avatar ?? string.Empty,
-                MediaPath = posts.MediaPath,
-                WrittenText = posts.WrittenText ?? string.Empty,
+                PostMediaWithTypes = this.db.PostsMedia.Where(x => x.UserPostId == posts.UserPostId).Select(media => new PostsWithTypes
+                {
+                    MediaName = media.MediaPath ?? string.Empty,
+                    MediaType = media.MediaType ?? string.Empty,
+                }).AsEnumerable(),
+                WrittenText = posts.Description ?? string.Empty,
                 CreatedAt = posts.CreatedAt,
-            }).OrderByDescending(sequence => sequence.CreatedAt).ToListAsync();
+            }).ToList();
 
             return getAllPosts;
         }
@@ -198,7 +231,7 @@ namespace Facebook.Repositories
             }
             else
             {
-                postComment = await this.db.PostComments.FirstOrDefaultAsync(fetchComment => fetchComment.UserPostCommentId == comment.UserPostCommentId
+                postComment = await this.db.PostComments.Include(comment => comment.User).FirstOrDefaultAsync(fetchComment => fetchComment.UserPostCommentId == comment.UserPostCommentId
                               && fetchComment.DeletedAt == null);
                 if (postComment == null)
                 {
@@ -207,7 +240,7 @@ namespace Facebook.Repositories
                 }
 
                 if (postComment.UserId != comment.UserId)
-                    errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.Unauthorized, ErrorMessage = "Don't change User." });
+                    errors.Add(new ValidationsModel { StatusCode = (int)HttpStatusCode.Unauthorized, ErrorMessage = "Comment can not be edited by another user." });
                 if (errors.Any())
                     throw new AggregateValidationException { Validations = errors };
 
@@ -217,7 +250,17 @@ namespace Facebook.Repositories
             }
 
             await this.db.SaveChangesAsync();
-            return await this.GetPostCommetnById(postComment.UserPostCommentId);
+            GetPostCommentModel getPostComment = new()
+            {
+                UserPostCommentId = postComment.UserPostCommentId,
+                UserPostId = postComment.UserPostId,
+                UserId = postComment.UserId,
+                CommentedUserName = postComment.User.FirstName + " " + postComment.User.LastName,
+                CommentedUserAvtar = postComment.User.Avatar,
+                CommentText = postComment.CommentText,
+                CreatedAt = postComment.CreatedAt,
+            };
+            return getPostComment;
         }
 
         /// <summary>
@@ -323,6 +366,7 @@ namespace Facebook.Repositories
                 errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "Post Is Not Found."));
             if (errors.Any())
                 throw new AggregateValidationException { Validations = errors };
+
             PostLike postLike = await this.db.PostLikes.FirstOrDefaultAsync(like => like.LikeUserId == userId && like.UserPostId == postId) ?? new PostLike();
 
             if (postLike.UserPostLikeId == 0)
@@ -335,7 +379,7 @@ namespace Facebook.Repositories
             }
             else
             {
-                postLike.LikeStatus = postLike.LikeStatus == false ? true : false;
+                postLike.LikeStatus = !postLike.LikeStatus;
                 postLike.LikeDate = DateTime.Now;
                 this.db.PostLikes.Update(postLike);
             }
@@ -349,7 +393,7 @@ namespace Facebook.Repositories
         /// </summary>
         /// <param name="postId">The post identifier.</param>
         /// <returns>get likes of that post.</returns>
-        public async Task<List<GetUserPostLikeModel>> GetPostLikes(long postId)
+        public async Task<GetUserPostLikeWithCountModel> GetPostLikes(long postId)
         {
             List<ValidationsModel> errors = new();
 
@@ -369,7 +413,13 @@ namespace Facebook.Repositories
                     LikedUserAvtar = getLike.LikeUser.Avatar,
                     CreatedAt = getLike.LikeDate,
                 }).ToListAsync();
-            return getUserPostLikes;
+
+            GetUserPostLikeWithCountModel getPostLikesWithCount = new()
+            {
+                GetUserPostLikes = getUserPostLikes,
+                LikesCount = getUserPostLikes.Count,
+            };
+            return getPostLikesWithCount;
         }
     }
 }

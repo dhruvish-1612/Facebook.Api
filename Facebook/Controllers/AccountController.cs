@@ -55,7 +55,6 @@ namespace Facebook.Controllers
         /// Forgots the password.
         /// </summary>
         /// <param name="emailId">The email identifier.</param>
-        /// <param name="userId">The user identifier.</param>
         /// <returns> UserId. </returns>
         [AllowAnonymous]
         [HttpGet]

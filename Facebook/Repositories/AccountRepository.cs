@@ -81,7 +81,6 @@ namespace Facebook.Repositories
         /// Forgots the password.
         /// </summary>
         /// <param name="emailId">The email identifier.</param>
-        /// <param name="userId">The user identifier.</param>
         /// <returns>email for forgot password and return userId.</returns>
         public async Task<long> SendTokenViaMailForForgotPassword(string emailId)
         {

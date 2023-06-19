@@ -23,7 +23,7 @@ namespace Facebook.Model
         /// <value>
         /// The post text.
         /// </value>
-        public string PostText { get; set; } = string.Empty;
+        public string? PostText { get; set; }
 
         /// <summary>
         /// Gets or sets the posts.

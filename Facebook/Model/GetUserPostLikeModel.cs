@@ -1,12 +1,11 @@
-﻿// <copyright file="getUserPostLIkeModel.cs" company="PlaceholderCompany">
+﻿// <copyright file="GetUserPostLikeModel.cs" company="PlaceholderCompany">
 // Copyright (c) PlaceholderCompany. All rights reserved.
 // </copyright>
-
 
 namespace Facebook.Model
 {
     /// <summary>
-    /// Get User
+    /// Get User.
     /// </summary>
     public class GetUserPostLikeModel
     {

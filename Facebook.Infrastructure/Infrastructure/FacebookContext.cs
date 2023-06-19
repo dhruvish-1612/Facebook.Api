@@ -27,6 +27,8 @@ public partial class FacebookContext : DbContext
 
     public virtual DbSet<PostLike> PostLikes { get; set; }
 
+    public virtual DbSet<PostsMedium> PostsMedia { get; set; }
+
     public virtual DbSet<Story> Stories { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
@@ -225,6 +227,33 @@ public partial class FacebookContext : DbContext
                 .HasConstraintName("fk_post_like_user_post_id");
         });
 
+        modelBuilder.Entity<PostsMedium>(entity =>
+        {
+            entity.HasKey(e => e.PostMediaId).HasName("PK__posts_me__02CDD6180A0FB8DF");
+
+            entity.ToTable("posts_media");
+
+            entity.Property(e => e.PostMediaId).HasColumnName("post_media_id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.MediaPath)
+                .HasMaxLength(2048)
+                .IsUnicode(false)
+                .HasColumnName("media_path");
+            entity.Property(e => e.MediaType)
+                .HasMaxLength(10)
+                .IsUnicode(false)
+                .HasColumnName("media_type");
+            entity.Property(e => e.UserPostId).HasColumnName("user_post_id");
+
+            entity.HasOne(d => d.UserPost).WithMany(p => p.PostsMedia)
+                .HasForeignKey(d => d.UserPostId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_posts_media_user_post_id");
+        });
+
         modelBuilder.Entity<Story>(entity =>
         {
             entity.HasKey(e => e.StoryId).HasName("PK__story__66339C56741B0803");
@@ -342,21 +371,13 @@ public partial class FacebookContext : DbContext
             entity.Property(e => e.DeletedAt)
                 .HasColumnType("datetime")
                 .HasColumnName("deleted_at");
-            entity.Property(e => e.MediaPath)
-                .HasMaxLength(2048)
-                .IsUnicode(false)
-                .HasColumnName("media_path");
-            entity.Property(e => e.MediaType)
-                .HasMaxLength(10)
-                .IsUnicode(false)
-                .HasColumnName("media_type");
+            entity.Property(e => e.Description)
+                .HasColumnType("text")
+                .HasColumnName("description");
             entity.Property(e => e.UpdatedAt)
                 .HasColumnType("datetime")
                 .HasColumnName("updated_at");
             entity.Property(e => e.UserId).HasColumnName("user_id");
-            entity.Property(e => e.WrittenText)
-                .HasColumnType("text")
-                .HasColumnName("written_text");
 
             entity.HasOne(d => d.User).WithMany(p => p.UserPosts)
                 .HasForeignKey(d => d.UserId)

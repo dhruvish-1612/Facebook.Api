@@ -50,12 +50,30 @@ namespace Facebook.Controllers
         /// </summary>
         /// <param name="userId">The user identifier.</param>
         /// <returns>get all stories for that users.</returns>
-        [HttpGet("getStoryForThatUser")]
+        [HttpGet("GetStoryForThatUser")]
         public async Task<IActionResult> GetAllStoriesForUserAsync(long userId)
         {
             try
             {
                 return this.Ok(await this.storyRepository.GetAllStoriesForUserAsync(userId));
+            }
+            catch (AggregateValidationException ex)
+            {
+                return this.BadRequest(ex.Validations);
+            }
+        }
+
+        /// <summary>
+        /// Deltes the story.
+        /// </summary>
+        /// <param name="storyId">The story identifier.</param>
+        /// <returns>true if story is deleted.</returns>
+        [HttpDelete("DeleteStory")]
+        public async Task<IActionResult> DeleteStory(long storyId)
+        {
+            try
+            {
+                return this.Ok(await this.storyRepository.DeleteStory(storyId));
             }
             catch (AggregateValidationException ex)
             {
