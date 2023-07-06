@@ -26,14 +26,6 @@ namespace Facebook.Model
         public long UserPostId { get; set; }
 
         /// <summary>
-        /// Gets or sets the user identifier.
-        /// </summary>
-        /// <value>
-        /// The user identifier.
-        /// </value>
-        public long UserId { get; set; }
-
-        /// <summary>
         /// Gets or sets the comment text.
         /// </summary>
         /// <value>

@@ -55,7 +55,7 @@ namespace Facebook.Model
         /// <value>
         /// The post media with types.
         /// </value>
-        public IEnumerable<PostsWithTypes>? PostMediaWithTypes { get; set; }
+        public List<PostsWithTypes>? PostMediaWithTypes { get; set; }
 
         /// <summary>
         /// Gets or sets the created at.

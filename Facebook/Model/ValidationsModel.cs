@@ -11,14 +11,6 @@ namespace Facebook.Model
     /// </summary>
     public class ValidationsModel
     {
-        /// <summary>Gets or sets the status code.</summary>
-        /// <value>The status code.</value>
-        public int StatusCode { get; set; }
-
-        /// <summary>Gets or sets the error message.</summary>
-        /// <value>The error message.</value>
-        public string? ErrorMessage { get; set; }
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ValidationsModel" /> class.
         /// </summary>
@@ -36,5 +28,13 @@ namespace Facebook.Model
         public ValidationsModel()
         {
         }
+
+        /// <summary>Gets or sets the status code.</summary>
+        /// <value>The status code.</value>
+        public int StatusCode { get; set; }
+
+        /// <summary>Gets or sets the error message.</summary>
+        /// <value>The error message.</value>
+        public string? ErrorMessage { get; set; }
     }
 }

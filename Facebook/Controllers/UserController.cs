@@ -6,8 +6,10 @@ namespace Facebook.Controllers
 {
     using Facebook.Constant;
     using Facebook.CustomException;
+    using Facebook.Helpers;
     using Facebook.Interface;
     using Facebook.Model;
+    using Facebook.ParameterModel;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
 
@@ -16,8 +18,7 @@ namespace Facebook.Controllers
     /// </summary>
     /// <seealso cref="Microsoft.AspNetCore.Mvc.ControllerBase" />
     [Authorize(Roles = AccessRoleConstant.UserRole)]
-    [Route("[controller]/[action]")]
-    [ApiController]
+    [Route("[controller]")]
     public class UserController : ControllerBase
     {
         /// <summary>
@@ -29,18 +30,23 @@ namespace Facebook.Controllers
         /// Initializes a new instance of the <see cref="UserController"/> class.
         /// </summary>
         /// <param name="userRepository">The user repository.</param>
-        public UserController(IUserRepository userRepository) => this.userRepository = userRepository;
+        public UserController(IUserRepository userRepository)
+        {
+            this.userRepository = userRepository;
+        }
 
         /// <summary>
         /// Gets the users.
         /// </summary>
-        /// <returns>get all users.</returns>
-        [HttpGet]
-        [Authorize(Roles = AccessRoleConstant.AdminRole)]
-
-        public async Task<IActionResult> GetUsers()
+        /// <param name="paginationParams">The pagination parameters.</param>
+        /// <returns>
+        /// get all users.
+        /// </returns>
+        [HttpPost("GetUsers")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetUsers([FromBody]PaginationParams paginationParams)
         {
-            return this.Ok(await this.userRepository.GetUsers());
+            return this.Ok(await this.userRepository.GetUsers(paginationParams));
         }
 
         /// <summary>
@@ -48,8 +54,7 @@ namespace Facebook.Controllers
         /// </summary>
         /// <param name="id">The identifier.</param>
         /// <returns>get User by id.</returns>
-        [HttpGet]
-        [AllowAnonymous]
+        [HttpGet("GetUserById/{id}")]
         public async Task<IActionResult> GetUsersById(long id)
         {
             try
@@ -66,23 +71,29 @@ namespace Facebook.Controllers
         /// <summary>
         /// Gets the cities.
         /// </summary>
-        /// <returns>get all the cities.</returns>
-        [HttpGet]
+        /// <param name="paginationParams">The pagination parameters.</param>
+        /// <returns>
+        /// get all the cities.
+        /// </returns>
+        [HttpPost("GetCities")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetCities()
+        public async Task<IActionResult> GetCities([FromBody]PaginationParams paginationParams)
         {
-            return this.Ok(await this.userRepository.GetCitiesAsync());
+            return this.Ok(await this.userRepository.GetCitiesAsync(paginationParams));
         }
 
         /// <summary>
         /// Gets the countries.
         /// </summary>
-        /// <returns>get all the countries.</returns>
-        [HttpGet]
+        /// <param name="paginationParams">The pagination parameters.</param>
+        /// <returns>
+        /// get all the countries.
+        /// </returns>
+        [HttpPost("GetCountries")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetCountries()
+        public async Task<IActionResult> GetCountries([FromBody]PaginationParams paginationParams)
         {
-            return this.Ok(await this.userRepository.GetCountryAsync());
+            return this.Ok(await this.userRepository.GetCountryAsync(paginationParams));
         }
 
         /// <summary>
@@ -90,7 +101,7 @@ namespace Facebook.Controllers
         /// </summary>
         /// <param name="user">The user.</param>
         /// <returns>User Upsert UserModel.</returns>
-        [HttpPost]
+        [HttpPost("Upsert")]
         [AllowAnonymous]
         public async Task<IActionResult> UserUpsert([FromForm] UserModel user)
         {
@@ -116,7 +127,7 @@ namespace Facebook.Controllers
         /// <returns>
         /// updated or added user object and if any exception occur while upserting then it is autometically throw the status code.
         /// </returns>
-        [HttpDelete]
+        [HttpDelete("DeleteUser/{userId}")]
         [AllowAnonymous]
         public async Task<IActionResult> DeleteUser(long id)
         {

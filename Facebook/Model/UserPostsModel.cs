@@ -10,14 +10,6 @@ namespace Facebook.Model
     public class UserPostsModel
     {
         /// <summary>
-        /// Gets or sets the user identifier.
-        /// </summary>
-        /// <value>
-        /// The user identifier.
-        /// </value>
-        public long UserId { get; set; } = 0;
-
-        /// <summary>
         /// Gets or sets the post text.
         /// </summary>
         /// <value>

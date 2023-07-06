@@ -6,6 +6,7 @@ namespace Facebook.Interface
 {
     using Facebook.Infrastructure.Infrastructure;
     using Facebook.Model;
+    using Facebook.ParameterModel;
 
     /// <summary>
     /// User Interface only method is defined.
@@ -15,8 +16,11 @@ namespace Facebook.Interface
         /// <summary>
         /// Gets the users.
         /// </summary>
-        /// <returns>get all the users.</returns>
-        Task<List<UserModel>> GetUsers();
+        /// <param name="paginationParams">The pagination parameters.</param>
+        /// <returns>
+        /// get all the users.
+        /// </returns>
+        Task<Pagination<UserModel>> GetUsers(PaginationParams paginationParams);
 
         /// <summary>
         /// Gets the user by identifier.
@@ -42,14 +46,20 @@ namespace Facebook.Interface
         /// <summary>
         /// Gets the country asynchronous.
         /// </summary>
-        /// <returns>get all the countries.</returns>
-        Task<List<Country>> GetCountryAsync();
+        /// <param name="paginationParams">The pagination parameters.</param>
+        /// <returns>
+        /// get all the countries.
+        /// </returns>
+        Task<Pagination<Country>> GetCountryAsync(PaginationParams paginationParams);
 
         /// <summary>
         /// Gets the cities asynchronous.
         /// </summary>
-        /// <returns>get all all the cities.</returns>
-        Task<List<City>> GetCitiesAsync();
+        /// <param name="paginationDParams">The pagination d parameters.</param>
+        /// <returns>
+        /// get all all the cities.
+        /// </returns>
+        Task<Pagination<City>> GetCitiesAsync(PaginationParams paginationDParams);
 
         /// <summary>
         /// Validates the password.

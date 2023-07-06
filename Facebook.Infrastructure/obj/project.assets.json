@@ -2466,11 +2466,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Facebook\\Facebook.Infrastructure\\Facebook.Infrastructure.csproj",
+      "projectUniqueName": "C:\\FaceBook Project\\Facebook\\Facebook.Infrastructure\\Facebook.Infrastructure.csproj",
       "projectName": "Facebook.Infrastructure",
-      "projectPath": "C:\\Facebook\\Facebook.Infrastructure\\Facebook.Infrastructure.csproj",
+      "projectPath": "C:\\FaceBook Project\\Facebook\\Facebook.Infrastructure\\Facebook.Infrastructure.csproj",
       "packagesPath": "C:\\Users\\pct71\\.nuget\\packages\\",
-      "outputPath": "C:\\Facebook\\Facebook.Infrastructure\\obj\\",
+      "outputPath": "C:\\FaceBook Project\\Facebook\\Facebook.Infrastructure\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages",

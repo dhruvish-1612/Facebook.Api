@@ -5,6 +5,7 @@
 namespace Facebook.Interface
 {
     using Facebook.Model;
+    using Facebook.ParameterModel;
 
     /// <summary>
     /// Account Interface.
@@ -23,8 +24,11 @@ namespace Facebook.Interface
         /// </summary>
         /// <param name="emailAddress">The email address.</param>
         /// <param name="token">The token.</param>
-        /// <returns>nothing.</returns>
-        Task SendTokenMail(string emailAddress, string token);
+        /// <param name="userName">Name of the user.</param>
+        /// <returns>
+        /// nothing.
+        /// </returns>
+        Task SendTokenMail(string emailAddress, string token, string userName);
 
         /// <summary>
         /// Updates the new password.
@@ -46,13 +50,11 @@ namespace Facebook.Interface
         /// <summary>
         /// Updates the new password.
         /// </summary>
-        /// <param name="userId">The user identifier.</param>
-        /// <param name="oldPassword">The old password.</param>
-        /// <param name="updatedPassword">The updated password.</param>
+        /// <param name="resetPasswordParam">The reset password parameter.</param>
         /// <returns>
         /// return true if successfully password changed.
         /// </returns>
-        Task<bool> ResetPassword(long userId, string oldPassword, string updatedPassword);
+        Task<bool> ResetPassword(ResetPasswordParam resetPasswordParam);
 
         /// <summary>
         /// Decodes the from64.

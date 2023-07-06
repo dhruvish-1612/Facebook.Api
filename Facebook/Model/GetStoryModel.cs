@@ -10,14 +10,6 @@ namespace Facebook.Model
     public class GetStoryModel
     {
         /// <summary>
-        /// Gets or sets the user identifier.
-        /// </summary>
-        /// <value>
-        /// The user identifier.
-        /// </value>
-        public long UserId { get; set; }
-
-        /// <summary>
         /// Gets or sets the text.
         /// </summary>
         /// <value>

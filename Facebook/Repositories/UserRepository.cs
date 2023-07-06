@@ -12,6 +12,7 @@ namespace Facebook.Repositories
     using Facebook.Infrastructure.Infrastructure;
     using Facebook.Interface;
     using Facebook.Model;
+    using Facebook.ParameterModel;
     using Microsoft.EntityFrameworkCore;
 
     /// <summary>
@@ -37,11 +38,16 @@ namespace Facebook.Repositories
         /// <summary>
         /// Gets the users.
         /// </summary>
-        /// <returns>get all the users.</returns>
-        public async Task<List<UserModel>> GetUsers()
+        /// <param name="paginationParams">pagination parameters.</param>
+        /// <returns>
+        /// get all the users.
+        /// </returns>
+        public async Task<Pagination<UserModel>> GetUsers(PaginationParams paginationParams)
         {
             List<User> userModels = await this.db.Users.ToListAsync();
-            return this.mapper.Map<List<UserModel>>(userModels) ?? new List<UserModel>();
+            List<UserModel> users = this.mapper.Map<List<UserModel>>(userModels) ?? new List<UserModel>();
+            List<UserModel> paginatedUsers = users.Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize).Take(paginationParams.PageSize).ToList();
+            return new Pagination<UserModel>(paginatedUsers, paginatedUsers.Count, users.Count);
         }
 
         /// <summary>
@@ -66,21 +72,29 @@ namespace Facebook.Repositories
         /// <summary>
         /// Gets the cities asynchronous.
         /// </summary>
-        /// <returns>get all the cities.</returns>
-        public async Task<List<City>> GetCitiesAsync()
+        /// <param name="paginationParams">The pagination parameters.</param>
+        /// <returns>
+        /// get all the cities.
+        /// </returns>
+        public async Task<Pagination<City>> GetCitiesAsync(PaginationParams paginationParams)
         {
             List<City> cities = await this.db.Cities.ToListAsync() ?? new List<City>();
-            return cities;
+            List<City> paginatedCities = cities.Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize).Take(paginationParams.PageSize).ToList();
+            return new Pagination<City>(paginatedCities, paginatedCities.Count, cities.Count);
         }
 
         /// <summary>
         /// Gets the country asynchronous.
         /// </summary>
-        /// <returns>get all the countries.</returns>
-        public async Task<List<Country>> GetCountryAsync()
+        /// <param name="paginationParams">The pagination parameters.</param>
+        /// <returns>
+        /// get all the countries.
+        /// </returns>
+        public async Task<Pagination<Country>> GetCountryAsync(PaginationParams paginationParams)
         {
             List<Country> countries = await this.db.Countries.ToListAsync() ?? new List<Country>();
-            return countries;
+            List<Country> paginatedCountries = countries.Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize).Take(paginationParams.PageSize).ToList();
+            return new Pagination<Country>(paginatedCountries, paginatedCountries.Count, countries.Count);
         }
 
         /// <summary>
@@ -131,6 +145,7 @@ namespace Facebook.Repositories
             user.Avatar = fileName;
             user.Password = Crypto.HashPassword(user.Password);
             user.Email = user.Email.ToLower();
+            user.Role = 1;
             User newlyUser = this.mapper.Map<User>(user);
             this.db.Users.Add(newlyUser);
             await this.db.SaveChangesAsync();

@@ -4,23 +4,22 @@
 
 namespace Facebook.Repositories
 {
-    using System.ComponentModel;
     using System.Net;
-    /*using System.Net.Mail;*/
-    using System.Text.RegularExpressions;
+    using System.Net.Mail;
+    using System.Text;
+    using System.Threading.Tasks;
     using System.Web.Helpers;
     using AutoMapper;
     using Facebook.Auth;
     using Facebook.CustomException;
-    using Facebook.Enums;
+    using Facebook.Hubs;
     using Facebook.Infrastructure.Infrastructure;
     using Facebook.Interface;
     using Facebook.Model;
-    using MailKit.Net.Smtp;
-    using MailKit.Security;
+    using Facebook.ParameterModel;
+    using Microsoft.AspNetCore.SignalR;
+    using Microsoft.AspNetCore.SignalR.Client;
     using Microsoft.EntityFrameworkCore;
-    using MimeKit;
-    using MimeKit.Text;
 
     /// <summary>
     /// Account Repository.
@@ -33,6 +32,8 @@ namespace Facebook.Repositories
         private readonly IUserRepository userRepository;
         private readonly IUserRequestRepository userRequest;
         private readonly IConfiguration configuration;
+        //private readonly IHubContext<FacebookHub> facebookHubContext;
+        //private readonly HubConnection hubConnection;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AccountRepository" /> class.
@@ -42,6 +43,7 @@ namespace Facebook.Repositories
         /// <param name="userRepository">The user repository.</param>
         /// <param name="userRequest">The user request.</param>
         /// <param name="configuration">The configuration.</param>
+        /// <param name="facebookHub">The facebook hub.</param>
         public AccountRepository(FacebookContext db, IMapper mapper, IUserRepository userRepository, IUserRequestRepository userRequest, IConfiguration configuration)
         {
             this.db = db;
@@ -49,6 +51,8 @@ namespace Facebook.Repositories
             this.userRepository = userRepository;
             this.userRequest = userRequest;
             this.configuration = configuration;
+            //this.facebookHubContext = facebookHub;
+            //this.hubConnection = new HubConnectionBuilder().WithUrl("https://localhost:44329/facebookHub").Build();
         }
 
         /// <summary>
@@ -64,16 +68,26 @@ namespace Facebook.Repositories
             if (!isValidEmail || !isVaildPassword)
                 errors.Add(new ValidationsModel((int)HttpStatusCode.Unauthorized, "Email Or Password Incorrect."));
 
-            User existUser = await this.db.Users.FirstOrDefaultAsync(user => user.Email.Equals(loginParams.Email.ToLower())) ?? new User();
+            User existUser = await this.db.Users.FirstOrDefaultAsync(user => user.Email == loginParams.Email.ToLower()) ?? new User();
 
-            if (existUser.UserId == 0 && !Crypto.VerifyHashedPassword(loginParams.Password, existUser.Password))
+            if (existUser.UserId == 0 || !Crypto.VerifyHashedPassword(existUser.Password, loginParams.Password))
                 errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "Email or Password Not Found."));
 
+           /* if (!Crypto.VerifyHashedPassword(existUser.Password, loginParams.Password))
+                errors.Add(new ValidationsModel((int)HttpStatusCode.Unauthorized, "Password Was Incorrect."));*/
             if (errors.Any())
                 throw new AggregateValidationException { Validations = errors };
 
             JwtSetting jwtSettings = this.configuration.GetSection(nameof(JwtSetting)).Get<JwtSetting>();
             string token = JwtTokenHelper.GenerateToken(jwtSettings, existUser);
+            //this.hubConnection.On<string>("Message", (broadcastMessage) =>
+            //{
+            //    System.Diagnostics.Debug.WriteLine(broadcastMessage);
+            //});
+            //await this.hubConnection.StartAsync();
+            //await this.facebookHubContext.Groups.AddToGroupAsync(this.hubConnection.ConnectionId, existUser.UserId.ToString());
+            //await this.facebookHubContext.Clients.All.SendAsync("Message", "hii");
+            //await this.hubConnection.StopAsync();
             return token;
         }
 
@@ -85,7 +99,7 @@ namespace Facebook.Repositories
         public async Task<long> SendTokenViaMailForForgotPassword(string emailId)
         {
             List<ValidationsModel> errors = new();
-            User user = await this.db.Users.FirstOrDefaultAsync(u => u.Email.Equals(emailId.ToLower()) && u.DeletedAt == null) ?? new User();
+            User user = await this.db.Users.Include(resetPassword => resetPassword.ForgotPasswords).FirstOrDefaultAsync(u => u.Email.Equals(emailId.ToLower()) && u.DeletedAt == null) ?? new User();
 
             if (user.UserId == 0)
                 errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "User Of This EmailAddress Not Exist"));
@@ -95,13 +109,23 @@ namespace Facebook.Repositories
 
             Random random = new();
             string finalString = random.Next(100000, 999999).ToString();
-            this.SendTokenMail(emailId, (string)finalString);
+            this.SendTokenMail(emailId, finalString, user.FirstName);
 
-            ForgotPassword entry = new();
+            ForgotPassword? entry = user.ForgotPasswords?.FirstOrDefault(checkToken => checkToken.UserId == user.UserId && checkToken.DeletedAt == null) ?? new();
             entry.UserId = user.UserId;
             entry.Token = finalString;
             entry.CreatedAt = DateTime.Now;
-            this.db.ForgotPasswords.Add(entry);
+
+            if (entry == null)
+            {
+                this.db.ForgotPasswords.Add(entry);
+            }
+            else
+            {
+                entry.UpdatedAt = DateTime.Now;
+                this.db.ForgotPasswords.Update(entry);
+            }
+
             await this.db.SaveChangesAsync();
             return user.UserId;
         }
@@ -163,34 +187,32 @@ namespace Facebook.Repositories
         /// <summary>
         /// Updates the new password.
         /// </summary>
-        /// <param name="userId">The user identifier.</param>
-        /// <param name="oldPassword">The old password.</param>
-        /// <param name="updatedPassword">The updated password.</param>
+        /// <param name="resetPasswordParam">The reset password parameter.</param>
         /// <returns>
         /// return true if password successfully updated.
         /// </returns>
         /// <exception cref="Facebook.CustomException.AggregateValidationException">validations for update new password.</exception>
-        public async Task<bool> ResetPassword(long userId, string oldPassword, string updatedPassword)
+        public async Task<bool> ResetPassword(ResetPasswordParam resetPasswordParam)
         {
             List<ValidationsModel> errors = new();
-            User? user = await this.db.Users.FirstOrDefaultAsync(x => x.UserId == userId && x.DeletedAt == null);
-            if (user == null)
+            User? user = await this.db.Users.FirstOrDefaultAsync(x => x.UserId == resetPasswordParam.UserId && x.DeletedAt == null) ?? new User();
+            if (user.UserId == 0)
                 errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "User Not Found"));
 
-            bool isValidPassword = await this.userRepository.ValidatePassword(updatedPassword);
+            bool isValidPassword = await this.userRepository.ValidatePassword(resetPasswordParam.UpdatedPassword);
             if (!isValidPassword)
                 errors.Add(new ValidationsModel((int)HttpStatusCode.Unauthorized, "Password Incorrect."));
 
-            if (!string.IsNullOrWhiteSpace(oldPassword))
+            if (!string.IsNullOrWhiteSpace(resetPasswordParam.OldPassword))
             {
-                if (!Crypto.VerifyHashedPassword(user.Password, oldPassword))
+                if (!Crypto.VerifyHashedPassword(user.Password, resetPasswordParam.OldPassword))
                     errors.Add(new ValidationsModel((int)HttpStatusCode.Unauthorized, "Old Password Is Incorrect."));
             }
 
             if (errors.Any())
                 throw new AggregateValidationException { Validations = errors };
 
-            user.Password = Crypto.HashPassword(updatedPassword);
+            user.Password = Crypto.HashPassword(resetPasswordParam.UpdatedPassword);
             this.db.Update(user);
             await this.db.SaveChangesAsync();
             return true;
@@ -201,8 +223,12 @@ namespace Facebook.Repositories
         /// </summary>
         /// <param name="emailAddress">The email address.</param>
         /// <param name="token">The token.</param>
-        /// <returns>Sned Mail to User for Forgot Password.</returns>
-        public async Task SendTokenMail(string emailAddress, string token)
+        /// <param name="userName">name of usewr.</param>
+        /// <returns>
+        /// Sned Mail to User for Forgot Password.
+        /// </returns>
+        /// <exception cref="Facebook.Model.ValidationsModel">Email sending failed.</exception>
+       /* public async Task SendTokenMail(string emailAddress, string token)
         {
             await Task.Run(() =>
             {
@@ -222,25 +248,66 @@ namespace Facebook.Repositories
                 smtp.Send(email);
                 smtp.Disconnect(true);
             });
+        }*/
+        public async Task SendTokenMail(string emailAddress, string token, string userName)
+        {
+            try
+            {
+                using (SmtpClient client = new("smtp.gmail.com", 587))
+                {
+                    client.EnableSsl = true;
+                    client.Credentials = new NetworkCredential("devloper.testing2022@gmail.com", "zryemtpwhipptczr");
+
+                    MailAddress from = new("devloper.testing2022@gmail.com", "Dhruvish Patel", Encoding.UTF8);
+                    MailAddress to = new(emailAddress);
+
+                    using (MailMessage message = new(from, to))
+                    {
+                        string htmlBody = $@"<html><head></head><body><div style='background-color:#000;color:#fff;padding:20px;'><h1>Facebook</h1><hr><h3>Hi {userName},</h3><h3>We received a request to reset your Facebook password.</h3><br><h3>Enter the following password reset code:</h3><br><br>
+                                                    <button type='button' style='border-radius:5px;padding:0 30px;background-color:#46465a;color:#fff;border-color:blue;font-weight:bold'><h3>{token}</h3></button>
+                                                    <br><br><hr/><br><br><h4 style='display:flex;justify-content:center;'>This message was sent to:</h4><h4 style='display:flex;justify-content:center;'>{emailAddress}</h4></div></body></html>";
+
+                        message.Body = htmlBody;
+                        message.BodyEncoding = Encoding.UTF8;
+                        message.Subject = "Reset Your Password";
+                        message.SubjectEncoding = Encoding.UTF8;
+                        message.IsBodyHtml = true;
+
+                        client.Send(message);
+
+                        message.Body = htmlBody;
+                        message.BodyEncoding = Encoding.UTF8;
+                        message.Subject = "Reset Your Password";
+                        message.SubjectEncoding = Encoding.UTF8;
+                        message.IsBodyHtml = true;
+
+                        await client.SendMailAsync(message);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                throw new AggregateValidationException { Validations = new List<ValidationsModel> { new ValidationsModel((int)HttpStatusCode.InternalServerError, "Email sending failed") } };
+            }
         }
 
-        /* public async Task SendTokenMail(string emailAddress, string token)
-         {
-             await Task.Run(() =>
-             {
+        /*public async Task SendTokenMail(string emailAddress, string token)
+        {
+            await Task.Run(() =>
+            {
                  // Command-line argument must be the SMTP host.
                  SmtpClient client = new("smtp.gmail.com", 587);
-                 MailAddress from = new("devloper.testing2022@gmail.com", "Dhruvish " + (char)0xD8 + " Patel", System.Text.Encoding.UTF8);
-                 MailAddress to = new(emailAddress);
-                 MailMessage message = new("devloper.testing2022@gmail.com", emailAddress);
-                 message.Body = $"<h1>Click link to reset password</h1><br><h2> {token} </h2>";
-                 message.BodyEncoding = System.Text.Encoding.UTF8;
-                 message.Subject = "Reset Your Password";
-                 message.SubjectEncoding = System.Text.Encoding.UTF8;
-                 client.SendAsync(message, token);
-                 message.Dispose();
-             });
-         }*/
+                MailAddress from = new("devloper.testing2022@gmail.com", "Dhruvish " + (char)0xD8 + " Patel", System.Text.Encoding.UTF8);
+                MailAddress to = new(emailAddress);
+                MailMessage message = new("devloper.testing2022@gmail.com", emailAddress);
+                message.Body = $"<h1>Click link to reset password</h1><br><h2> {token} </h2>";
+                message.BodyEncoding = System.Text.Encoding.UTF8;
+                message.Subject = "Reset Your Password";
+                message.SubjectEncoding = System.Text.Encoding.UTF8;
+                client.SendAsync(message, token);
+                message.Dispose();
+            });
+        }*/
 
         /// <summary>
         /// Encodes the password to base64.

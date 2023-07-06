@@ -20,7 +20,12 @@
       "ProjectGuid": "46eadd31-f99d-435d-b052-ec5dd395bf67",
       "DisplayName": "Facebook.Infrastructure",
       "ColorIndex": 2
+    },
+    "919fd655-f067-4ba2-b932-d926e85dd6b4": {
+      "ProjectGuid": "919fd655-f067-4ba2-b932-d926e85dd6b4",
+      "DisplayName": "Script Documents",
+      "ColorIndex": 3
     }
   },
-  "NextColorIndex": 3
+  "NextColorIndex": 4
 }

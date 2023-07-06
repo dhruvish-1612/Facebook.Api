@@ -4,7 +4,7 @@
 
 namespace Facebook.Enums
 {
-    using Google.Apis.Util;
+    using Facebook.Helpers;
 
     /// <summary>
     /// Enum for User Frenship Request.

@@ -53,6 +53,8 @@ public partial class User
 
     public virtual ICollection<Friendship> FriendshipProfileRequestNavigations { get; set; } = new List<Friendship>();
 
+    public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+
     public virtual ICollection<PostComment> PostComments { get; set; } = new List<PostComment>();
 
     public virtual ICollection<PostLike> PostLikes { get; set; } = new List<PostLike>();

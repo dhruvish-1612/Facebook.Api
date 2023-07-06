@@ -50,6 +50,14 @@ namespace Facebook.Model
         public string? LikedUserAvtar { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether [like status].
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if [like status]; otherwise, <c>false</c>.
+        /// </value>
+        public bool? LikeStatus { get; set; }
+
+        /// <summary>
         /// Gets or sets the created at.
         /// </summary>
         /// <value>

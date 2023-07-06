@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Facebook\\Facebook\\Facebook.csproj": {}
+    "C:\\FaceBook Project\\Facebook\\Facebook\\Facebook.csproj": {}
   },
   "projects": {
-    "C:\\Facebook\\Facebook.Infrastructure\\Facebook.Infrastructure.csproj": {
+    "C:\\FaceBook Project\\Facebook\\Facebook.Infrastructure\\Facebook.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Facebook\\Facebook.Infrastructure\\Facebook.Infrastructure.csproj",
+        "projectUniqueName": "C:\\FaceBook Project\\Facebook\\Facebook.Infrastructure\\Facebook.Infrastructure.csproj",
         "projectName": "Facebook.Infrastructure",
-        "projectPath": "C:\\Facebook\\Facebook.Infrastructure\\Facebook.Infrastructure.csproj",
+        "projectPath": "C:\\FaceBook Project\\Facebook\\Facebook.Infrastructure\\Facebook.Infrastructure.csproj",
         "packagesPath": "C:\\Users\\pct71\\.nuget\\packages\\",
-        "outputPath": "C:\\Facebook\\Facebook.Infrastructure\\obj\\",
+        "outputPath": "C:\\FaceBook Project\\Facebook\\Facebook.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages",
@@ -73,14 +73,14 @@
         }
       }
     },
-    "C:\\Facebook\\Facebook\\Facebook.csproj": {
+    "C:\\FaceBook Project\\Facebook\\Facebook\\Facebook.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Facebook\\Facebook\\Facebook.csproj",
+        "projectUniqueName": "C:\\FaceBook Project\\Facebook\\Facebook\\Facebook.csproj",
         "projectName": "Facebook",
-        "projectPath": "C:\\Facebook\\Facebook\\Facebook.csproj",
+        "projectPath": "C:\\FaceBook Project\\Facebook\\Facebook\\Facebook.csproj",
         "packagesPath": "C:\\Users\\pct71\\.nuget\\packages\\",
-        "outputPath": "C:\\Facebook\\Facebook\\obj\\",
+        "outputPath": "C:\\FaceBook Project\\Facebook\\Facebook\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages",
@@ -102,8 +102,8 @@
           "net6.0": {
             "targetAlias": "net6.0",
             "projectReferences": {
-              "C:\\Facebook\\Facebook.Infrastructure\\Facebook.Infrastructure.csproj": {
-                "projectPath": "C:\\Facebook\\Facebook.Infrastructure\\Facebook.Infrastructure.csproj"
+              "C:\\FaceBook Project\\Facebook\\Facebook.Infrastructure\\Facebook.Infrastructure.csproj": {
+                "projectPath": "C:\\FaceBook Project\\Facebook\\Facebook.Infrastructure\\Facebook.Infrastructure.csproj"
               }
             }
           }
@@ -122,14 +122,6 @@
               "target": "Package",
               "version": "[12.0.1, )"
             },
-            "Google.Apis.Core": {
-              "target": "Package",
-              "version": "[1.60.0, )"
-            },
-            "MailKit": {
-              "target": "Package",
-              "version": "[4.0.0, )"
-            },
             "Microsoft.AspNet.WebHelpers": {
               "target": "Package",
               "version": "[3.2.9, )"
@@ -137,6 +129,14 @@
             "Microsoft.AspNetCore.Authentication.JwtBearer": {
               "target": "Package",
               "version": "[6.0.16, )"
+            },
+            "Microsoft.AspNetCore.SignalR": {
+              "target": "Package",
+              "version": "[1.1.0, )"
+            },
+            "Microsoft.AspNetCore.SignalR.Client": {
+              "target": "Package",
+              "version": "[7.0.8, )"
             },
             "Microsoft.EntityFrameworkCore": {
               "target": "Package",
@@ -151,10 +151,6 @@
               "suppressParent": "All",
               "target": "Package",
               "version": "[8.0.0-preview.4.23259.3, )"
-            },
-            "MimeKit": {
-              "target": "Package",
-              "version": "[4.0.0, )"
             },
             "StyleCop.Analyzers": {
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",

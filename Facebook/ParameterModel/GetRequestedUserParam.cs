@@ -10,14 +10,6 @@ namespace Facebook.ParameterModel
     public class GetRequestedUserParam
     {
         /// <summary>
-        /// Gets or sets the user identifier.
-        /// </summary>
-        /// <value>
-        /// The user identifier.
-        /// </value>
-        public long UserId { get; set; }
-
-        /// <summary>
         /// Gets or sets the filter.
         /// </summary>
         /// <value>
@@ -32,5 +24,13 @@ namespace Facebook.ParameterModel
         /// The type of the request.
         /// </value>
         public int RequestType { get; set; }
+
+        /// <summary>
+        /// Gets or sets the pagination parameters.
+        /// </summary>
+        /// <value>
+        /// The pagination parameters.
+        /// </value>
+        public PaginationParams PaginationParams { get; set; } = new PaginationParams();
     }
 }

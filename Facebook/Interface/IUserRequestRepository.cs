@@ -4,7 +4,9 @@
 
 namespace Facebook.Interface
 {
+    using System.Collections.Generic;
     using Facebook.Model;
+    using Facebook.ParameterModel;
 
     /// <summary>
     /// Interface for containing user request related methods.
@@ -23,12 +25,11 @@ namespace Facebook.Interface
         /// Gets the requested users asynchronous.
         /// </summary>
         /// <param name="userId">The user identifier.</param>
-        /// <param name="filter">The filter.</param>
-        /// <param name="requestType">Type of the request.</param>
+        /// <param name="getRequestedUserParam">The get requested user parameter.</param>
         /// <returns>
         /// sdf.
         /// </returns>
-        Task<List<RequestedUsersModel>> GetRequestedUsersAsync(long userId, int filter, int requestType);
+        Task<Pagination<RequestedUsersModel>> GetRequestedUsersAsync(long userId, GetRequestedUserParam getRequestedUserParam);
 
         /// <summary>Validates the friend request by identifier.</summary>
         /// <param name="id">The identifier.</param>
@@ -58,5 +59,33 @@ namespace Facebook.Interface
         /// <param name="userId">The user identifier.</param>
         /// <returns>true if valid user found o/w false.</returns>
         Task<bool> ValidateUserById(long userId);
+
+        /// <summary>
+        /// Unfollows the friends.
+        /// </summary>
+        /// <param name="rejectedUserId">The rejected user identifier.</param>
+        /// <param name="requestRejectedUserId">The request rejected user identifier.</param>
+        /// <returns>true if unfollow.</returns>
+        Task<bool> UnfollowFriends(long rejectedUserId, long requestRejectedUserId);
+
+        /// <summary>
+        /// Gets the suggessted friend.
+        /// </summary>
+        /// <param name="userId">The user identifier.</param>
+        /// <param name="paginationParams">The pagination parameters.</param>
+        /// <returns>
+        /// resturn suggested friend.
+        /// </returns>
+        Task<Pagination<GetFriendsModel>> GetSuggestedFriend(long userId, PaginationParams paginationParams);
+
+        /// <summary>
+        /// Gets the mutual friends.
+        /// </summary>
+        /// <param name="loginUserId">The login user identifier.</param>
+        /// <param name="friendParam">The friend parameter.</param>
+        /// <returns>
+        /// GetMutualFriends.
+        /// </returns>
+        Task<Pagination<GetFriendsModel>> GetMutualFriends(long loginUserId, GetNotificationParam friendParam);
     }
 }

@@ -7,6 +7,7 @@ namespace Facebook.Controllers
     using System.Net;
     using Facebook.Constant;
     using Facebook.CustomException;
+    using Facebook.Helpers;
     using Facebook.Interface;
     using Facebook.Model;
     using Facebook.ParameterModel;
@@ -18,28 +19,32 @@ namespace Facebook.Controllers
     /// </summary>
     /// <seealso cref="Microsoft.AspNetCore.Mvc.ControllerBase" />
     [Authorize(Roles = AccessRoleConstant.UserRole)]
-    [Route("[controller]/[action]")]
-    [ApiController]
+    [Route("[controller]")]
     public class UserRequestController : ControllerBase
     {
         /// <summary>
         /// The user request repository.
         /// </summary>
         private readonly IUserRequestRepository userRequestRepository;
+        private readonly GetUserId getUserId;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="UserRequestController"/> class.
+        /// Initializes a new instance of the <see cref="UserRequestController" /> class.
         /// </summary>
         /// <param name="userRequestRepository">The user request repository.</param>
-        public UserRequestController(IUserRequestRepository userRequestRepository) => this.userRequestRepository = userRequestRepository;
+        /// <param name="getUserId">The get user identifier.</param>
+        public UserRequestController(IUserRequestRepository userRequestRepository, GetUserId getUserId)
+        {
+            this.userRequestRepository = userRequestRepository;
+            this.getUserId = getUserId;
+        }
 
         /// <summary>Gets the friend request by identifier.</summary>
         /// <param name="id">The identifier.</param>
         /// <returns>
         ///   get FriendShip object.
         /// </returns>
-        [HttpGet]
-        [AllowAnonymous]
+        [HttpGet("GetFriendById/{id}")]
         public async Task<IActionResult> GetFriendRequestById(long id)
         {
             try
@@ -55,16 +60,17 @@ namespace Facebook.Controllers
         /// <summary>
         /// Sends the freind request.
         /// </summary>
-        /// <param name="requestId">The request identifier.</param>
-        /// <param name="acceptId">The accept identifier.</param>
-        /// <returns>return requested freindship object.</returns>
-        [HttpPost]
-        [AllowAnonymous]
-        public async Task<IActionResult> SendFreindRequest(long requestId, long acceptId)
+        /// <param name="toUserId">The accept identifier.</param>
+        /// <returns>
+        /// return requested freindship object.
+        /// </returns>
+        [HttpPost("SendFriendRequest")]
+        public async Task<IActionResult> SendFreindRequest(long toUserId)
         {
             try
             {
-                return this.Ok(await this.userRequestRepository.SendFreindRequest(requestId, acceptId));
+                long requestId = this.getUserId.GetLoginUserId();
+                return this.Ok(await this.userRequestRepository.SendFreindRequest(requestId, toUserId));
             }
             catch (AggregateValidationException ex)
             {
@@ -78,13 +84,35 @@ namespace Facebook.Controllers
         /// <param name="friendshipId">The friendship identifier.</param>
         /// <param name="identity">The identity.</param>
         /// <returns>return aprroved disapproved freindship object.</returns>
-        [HttpPut]
-        [AllowAnonymous]
+        // [HttpPut]
+        [HttpPost("ApproveOrRejectRequest")]
         public async Task<IActionResult> ApproveOrReject(long friendshipId, int identity)
         {
             try
             {
                 return this.Ok(await this.userRequestRepository.ApproveOrRejectRequest(friendshipId, identity));
+            }
+            catch (AggregateValidationException ex)
+            {
+                return this.BadRequest(ex.Validations);
+            }
+        }
+
+        /// <summary>
+        /// Unfollows the friend.
+        /// </summary>
+        /// <param name="requestRejectedUserId">The request rejected user identifier.</param>
+        /// <returns>
+        /// true if successfully unfollow friends.
+        /// </returns>
+        // [HttpPut]
+        [HttpPost("UnfollowFriend")]
+        public async Task<IActionResult> UnfollowFriend(long requestRejectedUserId)
+        {
+            try
+            {
+                long rejectedUserId = this.getUserId.GetLoginUserId();
+                return this.Ok(await this.userRequestRepository.UnfollowFriends(rejectedUserId, requestRejectedUserId));
             }
             catch (AggregateValidationException ex)
             {
@@ -99,13 +127,55 @@ namespace Facebook.Controllers
         /// <returns>
         /// GetRequestedUsers.
         /// </returns>
-        [AllowAnonymous]
-        [HttpGet]
-        public async Task<IActionResult> GetRequestedUsers(GetRequestedUserParam getRequestedUserParam)
+        [HttpPost("GetRequestedUsers")]
+        public async Task<IActionResult> GetRequestedUsers([FromBody] GetRequestedUserParam getRequestedUserParam)
         {
             try
             {
-                return this.Ok(await this.userRequestRepository.GetRequestedUsersAsync(getRequestedUserParam.UserId, getRequestedUserParam.Filter, getRequestedUserParam.RequestType));
+                long userId = this.getUserId.GetLoginUserId();
+                return this.Ok(await this.userRequestRepository.GetRequestedUsersAsync(userId, getRequestedUserParam));
+            }
+            catch (AggregateValidationException ex)
+            {
+                return this.BadRequest(ex.Validations);
+            }
+        }
+
+        /// <summary>
+        /// Gets the suggested friend.
+        /// </summary>
+        /// <param name="paginationParams">The pagination parameters.</param>
+        /// <returns>
+        /// GetSuggestedFriend.
+        /// </returns>
+        [HttpPost("GetSuggestedFriends")]
+        public async Task<IActionResult> GetSuggestedFriend([FromBody]PaginationParams paginationParams)
+        {
+            try
+            {
+                long userId = this.getUserId.GetLoginUserId();
+                return this.Ok(await this.userRequestRepository.GetSuggestedFriend(userId,paginationParams));
+            }
+            catch (AggregateValidationException ex)
+            {
+                return this.BadRequest(ex.Validations);
+            }
+        }
+
+        /// <summary>
+        /// Gets the mutual friends.
+        /// </summary>
+        /// <param name="friendParam">The friend parameter.</param>
+        /// <returns>
+        /// GetMutualFriends.
+        /// </returns>
+        [HttpPost("GetMutualFriends")]
+        public async Task<IActionResult> GetMutualFriends([FromBody]GetNotificationParam friendParam)
+        {
+            try
+            {
+                long userId = this.getUserId.GetLoginUserId();
+                return this.Ok(await this.userRequestRepository.GetMutualFriends(userId, friendParam));
             }
             catch (AggregateValidationException ex)
             {

@@ -7,9 +7,13 @@ namespace Facebook.Repositories
     using System.Net;
     using AutoMapper;
     using Facebook.CustomException;
+    using Facebook.Enums;
+    using Facebook.Hubs;
     using Facebook.Infrastructure.Infrastructure;
     using Facebook.Interface;
     using Facebook.Model;
+    using Facebook.ParameterModel;
+    using Microsoft.AspNetCore.SignalR;
     using Microsoft.EntityFrameworkCore;
 
     /// <summary>
@@ -20,6 +24,8 @@ namespace Facebook.Repositories
         private readonly FacebookContext db;
         private readonly IMapper mapper;
         private readonly IUserRequestRepository userRequestRepository;
+        private readonly INotificationRepository notificationRepository;
+        private readonly IHubContext<FacebookHub> facebookHub;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="StoryRepository" /> class.
@@ -27,23 +33,29 @@ namespace Facebook.Repositories
         /// <param name="facebookContext">The facebook context.</param>
         /// <param name="mapper">The mapper.</param>
         /// <param name="userRequestRepository">The user request repository.</param>
-        public StoryRepository(FacebookContext facebookContext, IMapper mapper, IUserRequestRepository userRequestRepository)
+        /// <param name="notificationRepository">The notification repository.</param>
+        public StoryRepository(FacebookContext facebookContext, IMapper mapper, IUserRequestRepository userRequestRepository, INotificationRepository notificationRepository, IHubContext<FacebookHub> facebookHub)
         {
             this.db = facebookContext;
             this.mapper = mapper;
             this.userRequestRepository = userRequestRepository;
+            this.notificationRepository = notificationRepository;
+            this.facebookHub = facebookHub;
         }
 
         /// <summary>
         /// Adds the story by user.
         /// </summary>
+        /// <param name="userId">The user identifier.</param>
         /// <param name="story">The story.</param>
-        /// <returns>added story.</returns>
-        public async Task<StoryModel> AddStoryByUser(GetStoryModel story)
+        /// <returns>
+        /// added story.
+        /// </returns>
+        public async Task<GetAllUserPostModel> AddStoryByUser(long userId, GetStoryModel story)
         {
             List<ValidationsModel> errors = new();
-            bool isUserExist = await this.userRequestRepository.ValidateUserById(story.UserId);
-            if (!isUserExist)
+            User? user = await this.db.Users.FirstOrDefaultAsync(checkUser => checkUser.UserId == userId && checkUser.DeletedAt == null) ?? new User();
+            if (user.UserId == 0)
                 errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "User Not Found"));
 
             if (story.Media == null)
@@ -56,7 +68,7 @@ namespace Facebook.Repositories
 
             StoryModel addedStory = new()
             {
-                UserId = story.UserId,
+                UserId = userId,
                 MediaPath = storyModel.MediaPath,
                 MediaType = storyModel.MediaType,
                 WrittenText = story.Text,
@@ -64,7 +76,20 @@ namespace Facebook.Repositories
             Story? saveStory = this.mapper.Map<Story>(addedStory);
             this.db.Stories.Add(saveStory);
             await this.db.SaveChangesAsync();
-            return addedStory;
+
+            GetAllUserPostModel returnStory = new()
+            {
+                Id = saveStory.StoryId,
+                UserId = userId,
+                UserName = user.FirstName + " " + user.LastName,
+                UserAvtar = user.Avatar ?? string.Empty,
+                PostMediaWithTypes = new List<PostsWithTypes> { new PostsWithTypes { MediaName = storyModel.MediaPath, MediaType = storyModel.MediaType } },
+                WrittenText = story.Text,
+                CreatedAt = DateTime.Now,
+            };
+            List<string> toUserIds = await this.notificationRepository.AddStoryNotification(saveStory.UserId, saveStory.StoryId);
+            await this.facebookHub.Clients.Groups(toUserIds).SendAsync("SendNotification", returnStory);
+            return returnStory;
         }
 
         /// <summary>
@@ -88,8 +113,11 @@ namespace Facebook.Repositories
         /// Gets all stories for user asynchronous.
         /// </summary>
         /// <param name="userId">The user identifier.</param>
-        /// <returns>get all the stories for that user.</returns>
-        public async Task<List<GetAllUserPostModel>> GetAllStoriesForUserAsync(long userId)
+        /// <param name="paginationParam">The get notification parameter.</param>
+        /// <returns>
+        /// get all the stories for that user.
+        /// </returns>
+        public async Task<Pagination<GetAllUserPostModel>> GetAllStoriesForUserAsync(long userId, PaginationParams paginationParam)
         {
             List<ValidationsModel> errors = new();
             bool isUserExist = await this.userRequestRepository.ValidateUserById(userId);
@@ -111,18 +139,90 @@ namespace Facebook.Repositories
                 query = this.db.Stories.Where(story => story.UserId == userId && story.CreatedAt >= thresholdTime);
             }
 
-            List<GetAllUserPostModel> getAllStoriesForUserModels = await query.Select(story => new GetAllUserPostModel
+            List<GetAllUserPostModel> getAllStoriesForUser = query.Select(story => new GetAllUserPostModel
             {
                 Id = story.StoryId,
                 UserId = story.UserId,
                 UserName = story.User.FirstName + " " + story.User.LastName,
                 UserAvtar = story.User.Avatar ?? string.Empty,
-               // MediaPath = story.MediaPath,
+                PostMediaWithTypes = new List<PostsWithTypes> { new PostsWithTypes { MediaName = story.MediaPath, MediaType = story.MediaType } },
                 WrittenText = story.WrittenText,
                 CreatedAt = story.CreatedAt,
-            }).OrderByDescending(user => user.UserId == userId).ToListAsync();
+            }).OrderByDescending(user => user.UserId == userId).ToList();
 
-            return getAllStoriesForUserModels;
+            if (getAllStoriesForUser.Any())
+                getAllStoriesForUser = getAllStoriesForUser.DistinctBy(story => story.Id).ToList();
+
+            List<GetAllUserPostModel> getPaginatedAllStoriesForUser = getAllStoriesForUser.Skip((paginationParam.PageNumber - 1) * paginationParam.PageSize)
+                                                                      .Take(paginationParam.PageSize).ToList();
+            return new Pagination<GetAllUserPostModel>(getPaginatedAllStoriesForUser, getPaginatedAllStoriesForUser.Count, getAllStoriesForUser.Count);
+        }
+
+        /*public async Task<Pagination<GetAllUserPostModel>> GetAllStoriesForUserAsync(long userId, PaginationParams paginationParam)
+        {
+            List<ValidationsModel> errors = new();
+            bool isUserExist = await this.userRequestRepository.ValidateUserById(userId);
+            if (!isUserExist)
+                errors.Add(new ValidationsModel((int)HttpStatusCode.NotFound, "User Not Found"));
+
+            if (errors.Any())
+                throw new AggregateValidationException { Validations = errors };
+
+            DateTime thresholdTime = DateTime.Now.AddDays(-1);
+            IQueryable<Story> query;
+            query = this.db.Friendships.Where(friend => (friend.ProfileAccept == userId || friend.ProfileRequest == userId)
+                    && friend.DeletedAt == null && friend.IsFriend == true)
+                   .SelectMany(friend => friend.ProfileAcceptNavigation.Stories.Concat(friend.ProfileRequestNavigation.Stories));
+                   // .Where(checkStoryTime => checkStoryTime.CreatedAt >= thresholdTime);
+
+            if (!query.Any())
+            {
+                query = this.db.Stories.Where(story => story.UserId == userId && story.CreatedAt >= thresholdTime);
+            }
+
+            List<GetAllUserPostModel> getAllStoriesForUser = query.Select(story => new GetAllUserPostModel
+            {
+                Id = story.StoryId,
+                UserId = story.UserId,
+                UserName = story.User.FirstName + " " + story.User.LastName,
+                UserAvtar = story.User.Avatar ?? string.Empty,
+                PostMediaWithTypes = new List<PostsWithTypes> { new PostsWithTypes { MediaName = story.MediaPath, MediaType = story.MediaType } },
+                WrittenText = story.WrittenText,
+                CreatedAt = story.CreatedAt,
+            }).OrderByDescending(user => user.UserId == userId).ToList();
+
+            if (getAllStoriesForUser.Any())
+                getAllStoriesForUser = getAllStoriesForUser.DistinctBy(story => story.Id).ToList();
+
+            List<GetAllUserPostModel> getPaginatedAllStoriesForUser = getAllStoriesForUser.Skip((paginationParam.PageNumber - 1) * paginationParam.PageSize)
+                                                                      .Take(paginationParam.PageSize).ToList();
+            return new Pagination<GetAllUserPostModel>(getPaginatedAllStoriesForUser, getPaginatedAllStoriesForUser.Count, getAllStoriesForUser.Count);
+        }*/
+
+        /// <summary>
+        /// Gets the story by identifier.
+        /// </summary>
+        /// <param name="storyId">The story identifier.</param>
+        /// <returns>
+        /// get Story By Id.
+        /// </returns>
+        public async Task<GetAllUserPostModel> GetStoryById(long storyId)
+        {
+            GetAllUserPostModel? getStory = await this.db.Stories.Where(x => x.StoryId == storyId && x.DeletedAt == null).Select(story => new GetAllUserPostModel
+            {
+                Id = story.StoryId,
+                UserId = story.UserId,
+                UserName = $"{story.User.FirstName} {story.User.LastName}",
+                UserAvtar = story.User.Avatar ?? string.Empty,
+                PostMediaWithTypes = new List<PostsWithTypes> { new PostsWithTypes { MediaName = story.MediaPath ?? string.Empty, MediaType = story.MediaType ?? string.Empty } },
+                WrittenText = story.WrittenText ?? string.Empty,
+                CreatedAt = story.CreatedAt,
+            }).FirstOrDefaultAsync();
+
+            if (getStory == null)
+                throw new AggregateValidationException { Validations = new List<ValidationsModel> { new ValidationsModel((int)HttpStatusCode.Unauthorized, "StoryId Is Invalid") } };
+
+            return getStory;
         }
 
         /// <summary>
@@ -142,9 +242,16 @@ namespace Facebook.Repositories
                 throw new AggregateValidationException { Validations = errors };
             }
 
+            string uploadfile = Path.Combine(Directory.GetCurrentDirectory(), "Medias\\UserStories", story.MediaPath);
+            if (File.Exists(uploadfile))
+            {
+                await Task.Run(() => File.Delete(uploadfile));
+            }
+
             story.DeletedAt = DateTime.Now;
             this.db.Stories.Update(story);
             await this.db.SaveChangesAsync();
+            await this.notificationRepository.DeletePostOrStory(story.StoryId, (int)NotificationTypeEnum.AddStory);
             return true;
         }
     }

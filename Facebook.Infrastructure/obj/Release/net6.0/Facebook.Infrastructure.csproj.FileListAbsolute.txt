@@ -1,0 +1,12 @@
+C:\FaceBook Project\Facebook\Facebook.Infrastructure\bin\Release\net6.0\Facebook.Infrastructure.deps.json
+C:\FaceBook Project\Facebook\Facebook.Infrastructure\bin\Release\net6.0\Facebook.Infrastructure.dll
+C:\FaceBook Project\Facebook\Facebook.Infrastructure\bin\Release\net6.0\ref\Facebook.Infrastructure.dll
+C:\FaceBook Project\Facebook\Facebook.Infrastructure\bin\Release\net6.0\Facebook.Infrastructure.pdb
+C:\FaceBook Project\Facebook\Facebook.Infrastructure\obj\Release\net6.0\Facebook.Infrastructure.csproj.AssemblyReference.cache
+C:\FaceBook Project\Facebook\Facebook.Infrastructure\obj\Release\net6.0\Facebook.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+C:\FaceBook Project\Facebook\Facebook.Infrastructure\obj\Release\net6.0\Facebook.Infrastructure.AssemblyInfoInputs.cache
+C:\FaceBook Project\Facebook\Facebook.Infrastructure\obj\Release\net6.0\Facebook.Infrastructure.AssemblyInfo.cs
+C:\FaceBook Project\Facebook\Facebook.Infrastructure\obj\Release\net6.0\Facebook.Infrastructure.csproj.CoreCompileInputs.cache
+C:\FaceBook Project\Facebook\Facebook.Infrastructure\obj\Release\net6.0\Facebook.Infrastructure.dll
+C:\FaceBook Project\Facebook\Facebook.Infrastructure\obj\Release\net6.0\ref\Facebook.Infrastructure.dll
+C:\FaceBook Project\Facebook\Facebook.Infrastructure\obj\Release\net6.0\Facebook.Infrastructure.pdb

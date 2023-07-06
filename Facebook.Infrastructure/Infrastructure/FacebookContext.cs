@@ -23,6 +23,8 @@ public partial class FacebookContext : DbContext
 
     public virtual DbSet<Friendship> Friendships { get; set; }
 
+    public virtual DbSet<Notification> Notifications { get; set; }
+
     public virtual DbSet<PostComment> PostComments { get; set; }
 
     public virtual DbSet<PostLike> PostLikes { get; set; }
@@ -162,6 +164,32 @@ public partial class FacebookContext : DbContext
                 .HasForeignKey(d => d.ProfileRequest)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_friendship_profile_request");
+        });
+
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.ToTable("notification");
+
+            entity.Property(e => e.NotificationId).HasColumnName("notification_id");
+            entity.Property(e => e.ActivityId).HasColumnName("activity_id");
+            entity.Property(e => e.ActivityType).HasColumnName("activity_type");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.DeletedAt)
+                .HasColumnType("datetime")
+                .HasColumnName("deleted_at");
+            entity.Property(e => e.IsRead).HasColumnName("is_read");
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnType("datetime")
+                .HasColumnName("updated_at");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+
+            entity.HasOne(d => d.User).WithMany(p => p.Notifications)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__notificat__user___1C873BEC");
         });
 
         modelBuilder.Entity<PostComment>(entity =>
